@@ -3,9 +3,7 @@ library(haven)
 
 # Function to discretize continuous variables by assigning each observation to a bin
 # representing the mid-point with the adjacent observation.
-# When the number of unique values exceeds max_bins, falls back to quantile-based
-# breakpoints to keep the joint table size manageable.
-discretize_midpoints <- function(x, lower_cap = -Inf, upper_cap = Inf, max_bins = 50) {
+discretize_midpoints <- function(x, lower_cap = -Inf, upper_cap = Inf) {
     # Get sorted unique values (ignoring NAs to avoid errors)
     v <- sort(unique(x[!is.na(x)]))
 
@@ -15,14 +13,6 @@ discretize_midpoints <- function(x, lower_cap = -Inf, upper_cap = Inf, max_bins 
     }
     if (length(v) == 1) {
         return(as.factor(x))
-    }
-
-    # If too many unique values, reduce to quantile-based breakpoints
-    if (length(v) > max_bins) {
-        probs <- seq(0, 1, length.out = max_bins + 1)
-        quantile_breaks <- unique(quantile(x, probs = probs, na.rm = TRUE))
-        # Use inner quantile breaks as the representative unique values
-        v <- quantile_breaks[-c(1, length(quantile_breaks))]
     }
 
     # Calculate midpoints between adjacent unique values
@@ -47,7 +37,7 @@ discretize_midpoints <- function(x, lower_cap = -Inf, upper_cap = Inf, max_bins 
     # Use cut to discretize: include.lowest ensures the exact matching boundaries don't fall off
     binned_x <- cut(x, breaks = breaks, labels = labels, right = FALSE, include.lowest = TRUE)
 
-    # Attach the breaks as an attribute so we know the range when sampling later
+    # We attach the breaks as an attribute to binned_x so we know exactly the range when we sample later
     attr(binned_x, "breaks") <- breaks
 
     return(binned_x)
