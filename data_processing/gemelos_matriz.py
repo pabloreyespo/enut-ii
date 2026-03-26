@@ -48,7 +48,7 @@ if __name__ == "__main__":
                    'macrozona_norte',
                    'macrozona_centro',
                    'macrozona_sur',
-                   "horas_trabajo",
+                   "horas_trabajo_contratadas",
                    "n_menores",
                    "n_personas"]
 

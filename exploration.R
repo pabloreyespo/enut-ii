@@ -188,7 +188,7 @@ ggsave("plots/Histogram committed expenses.png",
 #### INCOME VARIABLES
 get_data()
 original   <- c("edad_anios","mayor45","menor25", "underage_in_household", "only_worker",
-                  "university", "n_menores6", "n_personas", "n_menores", "vive_pareja",
+                  "university", "n_menores_0_5", "n_personas", "n_menores", "vive_pareja",
                   "fuentes_externas",
                   "w", "I", "ing_trab", "ing_personal", "ingreso_hogar", "metropolitana", 'norte', 'centro', 'sur')
 replacement <- c("age","age>=45","age<25","# underage >=1","only worker",
