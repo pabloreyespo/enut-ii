@@ -224,23 +224,23 @@ sample_conditional_df <- function(data, dist_table, sample_cols, given_cols) {
 
 tiempo <- read.csv("data/enut-ii-11.csv") %>%
     mutate(
-        # paid_work = discretize_midpoints(t_paid_work, lower_cap = 0, upper_cap = 168),
-        sleep = discretize_midpoints(t_sleep, lower_cap = 0, upper_cap = 168)
+        paid_work = discretize_midpoints(round(t_paid_work), lower_cap = 0, upper_cap = 168),
+        sleep = discretize_midpoints(round(t_sleep), lower_cap = 0, upper_cap = 168)
     )
 
 
 # 1. Compute a large joint distribution
-large_joint <- compute_joint_distribution(tiempo, c("edad_anios", "sexo", "paid_work", "sleep"))
+large_joint <- compute_joint_distribution(tiempo, c("edad_anios", "sexo", "es_trabajador", "paid_work", "sleep"))
 
 # 2. Extract a specific conditional distribution P(Target | Given)
 # e.g., P(sleep, paid_work | edad_anios, sexo)
-sleep_given_age_sex <- query_conditional_distribution(large_joint, target_cols = c("sleep", "paid_work"), given_cols = c("edad_anios", "sexo"))
+sleep_given_age_sex <- query_conditional_distribution(large_joint, target_cols = c("sleep", "es_trabajador", "paid_work"), given_cols = c("edad_anios", "sexo"))
 
-temp <- tiempo[1:100, ] %>% select(id_persona, edad_anios, sexo)
+temp <- tiempo[1:100, ] %>% select(id_persona, edad_anios, sexo, es_trabajador)
 
 tiempo_synth <- sample_conditional_df(
     data = temp,
     dist_table = sleep_given_age_sex,
     sample_cols = c("sleep", "paid_work"),
-    given_cols = c("edad_anios", "sexo")
+    given_cols = c("edad_anios", "es_trabajador", "sexo")
 )
