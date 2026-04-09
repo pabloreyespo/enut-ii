@@ -77,38 +77,41 @@ data_post <- data_to168hours(data_post) # TODO probar distintos posicionamientos
 #  dplyr::select(ing_personal, ing_trab, w, tt, edad_anios, trabaja)
 
 data_descargable <- agregar_actividades(data_post)
-data25 <- data_descargable[["data25"]] %>% mutate(w = ing_trab / t_to)
-data11 <- data_descargable[["data11"]] %>% mutate(w = ing_trab / t_paid_work)
-haven::write_dta(data25, "data/enut-ii-25.dta")
-haven::write_dta(data11, "data/enut-ii-11.dta")
-write_csv(data25, "data/enut-ii-25.csv")
-write_csv(data11, "data/enut-ii-11.csv")
+data_raw <- data_descargable[["data25"]] %>% mutate(w = ing_trab / t_to)
+data_enut <- data_descargable[["data11"]] %>% mutate(w = ing_trab / Tw)
 
-source("data_processing/processing_functions.R")
-
-data25 = haven::read_dta( "data/enut-ii-25.dta")
-data11 = haven::read_dta( "data/enut-ii-11.dta")
-
-table(data25$es_trabajador)
-table(data25$es_familia)
+table(data_raw$es_trabajador)
+table(data_raw$es_familia)
 
 ## ----- Análisis datos resultantes -----------------
-data11G <- imputacion_gastos(data11)
-data25G <- imputacion_gastos(data25)
+data_raw_G <- imputacion_gastos(data_raw)
+data_enut_G <- imputacion_gastos(data_enut)
 
-haven::write_dta(data25G, "data/enut-ii-25G.dta")
-haven::write_dta(data11G, "data/enut-ii-11G.dta")
-write_csv(data25G, "data/enut-ii-25G.csv")
-write_csv(data11G, "data/enut-ii-11G.csv")
+# Agregando las categorias de gasto especificadas y limpiando las demas
+data_enut_G <- data_enut_G %>%
+  mutate(
+    Ef_food = alimentos,
+    Ef_recreation = recreacion,
+    Ef_restaurants = restaurantes,
+    Ef_communications = comunicaciones,
+    Ef_clothing = vestimenta,
+    Ec = cuentas + hogar + salud + transporte + educacion + savings
+  ) %>%
+  dplyr::select(-c(alimentos, recreacion, restaurantes, comunicaciones, vestimenta, cuentas, hogar, salud, transporte, educacion, savings, total_expenses))
 
-data25G_ENG <- rename_to_english_25(data25G)
-data11G_ENG <- rename_to_english_11(data11G)
-haven::write_dta(data25G_ENG, "data/enut-ii-25G-ENG.dta")
-haven::write_dta(data11G_ENG, "data/enut-ii-11G-ENG.dta")
-write_csv(data25G_ENG, "data/enut-ii-25G-ENG.csv")
-write_csv(data11G_ENG, "data/enut-ii-11G-ENG.csv")
+haven::write_dta(data_raw_G, "data/enut-ii-raw.dta")
+haven::write_dta(data_enut_G, "data/enut-ii.dta")
+write_csv(data_raw_G, "data/enut-ii-raw.csv")
+write_csv(data_enut_G, "data/enut-ii.csv")
 
-ggplot(data11G, aes(x = w)) + geom_histogram(bins = 50)
+data_raw_G_ENG <- rename_to_english_raw(data_raw_G)
+data_enut_G_ENG <- rename_to_english_enut(data_enut_G)
+haven::write_dta(data_raw_G_ENG, "data/enut-ii-raw-ENG.dta")
+haven::write_dta(data_enut_G_ENG, "data/enut-ii-ENG.dta")
+write_csv(data_raw_G_ENG, "data/enut-ii-raw-ENG.csv")
+write_csv(data_enut_G_ENG, "data/enut-ii-ENG.csv")
+
+ggplot(data_enut_G, aes(x = w)) + geom_histogram(bins = 50)
 
 #library(fitdistrplus)
 #fg <- fitdist(data$t_total_ds, "gamma")

@@ -54,6 +54,19 @@ t_agregados <- c(
   "t_commute2"
 )
 
+t_agregados_new <- c(
+  "Tw",
+  "Tf_social",
+  "Tf_hobbies",
+  "Tf_read",
+  "Tf_listen",
+  "Tf_watch",
+  "Tf_computer",
+  "Tc_meals",
+  "Tc_sleep",
+  "Tc_other"
+)
+
 identificadores <- c("id_persona", "id_hog")
 composicion_hogar <- c(
   "parentesco",
@@ -93,7 +106,7 @@ sociodemograficas <- c(
   "prop_ing_hogar"
 )
 
-laborales <- c("cae", "ocup_form", "cise", "ciuo_agrupada")
+laborales <- c("teletrabaja", "jornada_laboral", "cae", "ocup_form", "cise", "ciuo_agrupada")
 proveedores_externos <- c("servicio_domestico", "ayuda_cercanos", "fuentes_externas")
 ingresos <- c("ing_ocuppal", "ing_trab", "ing_jub_aps", "ing_g", "ing_t_hogar", "ing_t_pc", "ing_gpp", "ing_personal", "ingreso_hogar", "income_person_week")
 tipo_muestra <- c("es_trabajador", "es_familia")
@@ -540,6 +553,22 @@ adjust_working_hours <- function(data, normalize = TRUE) {
 agregar_actividades <- function(data_post) {
   data_post <- data_post %>%
     mutate(
+      Tw = t_to,
+      Tf_social = t_vsyo_csar,
+      Tf_hobbies = t_vsyo_aa,
+      Tf_read = t_mcm_leer,
+      Tf_listen = t_mcm_audio,
+      Tf_watch = t_mcm_video,
+      Tf_computer = t_mcm_computador,
+      Tc_meals = t_cpag_comer,
+      Tc_sleep = t_cpag_dormir,
+      Tc_other = dplyr::select(., c(
+        "t_tdnr_psc", "t_tdnr_lv", "t_tdnr_lrc", "t_tdnr_mrm",
+        "t_tdnr_admnhog", "t_tdnr_comphog", "t_tdnr_cmp",
+        "t_tcnr_ce", "t_tcnr_re", "t_tcnr_oac",
+        "t_tvaoh_tv", "t_tvaoh_oh",
+        "t_cpaf_cp", "t_ed", "t_tt1", "t_tt2"
+      )) %>% rowSums(na.rm = TRUE),
       t_paid_work = t_to, # free
       t_domestic_work = dplyr::select(., c(
         "t_tdnr_psc", "t_tdnr_lv", "t_tdnr_lrc", "t_tdnr_mrm",
@@ -556,7 +585,7 @@ agregar_actividades <- function(data_post) {
       t_sleep = t_cpag_dormir, # committed/free
       t_commute1 = t_tt1,
       t_commute2 = t_tt2
-    ) # committed
+    )
 
   data_post <- data_post %>%
     mutate(
@@ -596,13 +625,15 @@ agregar_actividades <- function(data_post) {
       all_of(laborales),
       bs1:bs19,
       all_of(ingresos),
-      all_of(t_agregados)
+      all_of(t_agregados),
+      all_of(t_agregados_new)
     ) %>%
     mutate(t_total = dplyr::select(., all_of(t_agregados)) %>% rowSums(na.rm = TRUE))
 
-  data11[, t_agregados] <- round(data11[, t_agregados], 2)
+  data11[, c(t_agregados, t_agregados_new)] <- round(data11[, c(t_agregados, t_agregados_new)], 2)
   data11[, "temp"] <- rowSums(data11[, t_agregados])
   data11[, "t_sleep"] <- data11[, "t_sleep"] - (data11[, "temp"] - 168)
+  data11[, "Tc_sleep"] <- data11[, "Tc_sleep"] - (data11[, "temp"] - 168)
   data11[, "temp"] <- rowSums(data11[, t_agregados])
 
   return(list(data25 = data25, data11 = data11))
@@ -769,6 +800,8 @@ imputacion_gastos <- function(data) {
   region_name          = "glosa_region",
   income_share         = "prop_ing_hogar",
   # labor
+  teleworks            = "teletrabaja",
+  work_schedule        = "jornada_laboral",
   employment_status    = "cae",
   formality            = "ocup_form",
   occupation_group     = "ciuo_agrupada",
@@ -798,7 +831,7 @@ imputacion_gastos <- function(data) {
   restaurants          = "restaurantes"
 )
 
-rename_to_english_25 <- function(data) {
+rename_to_english_raw <- function(data) {
   time_mapping <- c(
     t_paid_work              = "t_to",
     t_care_essential         = "t_tcnr_ce",
@@ -827,10 +860,10 @@ rename_to_english_25 <- function(data) {
     t_commute2               = "t_tt2"
   )
   swb_mapping <- setNames(paste0("bs", 1:19), paste0("swb", 1:19))
-  data %>% dplyr::rename(!!!c(.rename_common_eng, time_mapping, swb_mapping))
+  data %>% dplyr::rename(any_of(c(.rename_common_eng, time_mapping, swb_mapping)))
 }
 
-rename_to_english_11 <- function(data) {
+rename_to_english_enut <- function(data) {
   swb_mapping <- setNames(paste0("bs", 1:19), paste0("swb", 1:19))
-  data %>% dplyr::rename(!!!c(.rename_common_eng, swb_mapping))
+  data %>% dplyr::rename(any_of(c(.rename_common_eng, swb_mapping)))
 }
