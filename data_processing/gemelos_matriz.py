@@ -70,7 +70,7 @@ if __name__ == "__main__":
 
     n = len(data)
     mu = np.zeros((n,n))
-    with Pool(1, initializer = init_worker, initargs = (data, covinv, Q, mu, )) as p:
+    with Pool(10, initializer = init_worker, initargs = (data, covinv, Q, mu, )) as p:
         r = list(tqdm(p.imap(minim, range(n)), total=n))
 
     for i, vec in r:

@@ -184,15 +184,18 @@
 #' }
 #'
 #' @details
-#' The dataset is produced by running \code{data_processing/data_processing.R} followed by
-#' \code{imputacion_gastos()}. Time variables are normalized to a 168-hour week using a
-#' two-step procedure: paid work (\code{t_to}) and sleep (\code{t_cpag_dormir}) are treated
-#' as reliable anchors; all other activities are scaled proportionally. Weekend time use is
-#' imputed via a twin-matching matrix when the respondent's diary day was a weekday.
-#' Outliers are removed using Vallejo's method by groups of quintile, employment status,
-#' age bracket, and sex. Expenditures are imputed from EPF IX using a fractional MNL model
-#' for budget shares and a linear regression for the savings rate, then allocated to
-#' individuals by \code{prop_ing_hogar}.
+#' The dataset is produced by running \code{data_processing/data_processing.R}. Time
+#' variables are normalized to a 168-hour week using a two-step procedure: paid work
+#' (\code{t_to}) and sleep (\code{t_cpag_dormir}) are treated as reliable anchors;
+#' all other activities are scaled proportionally. Weekend time use is imputed via a
+#' twin-matching matrix when the respondent's diary day was a weekday. Outliers are
+#' removed using Vallejo's method by groups of quintile, employment status, age
+#' bracket, and sex. Expenditures are imputed from EPF IX using a fractional MNL
+#' model for budget shares and a linear regression for the savings rate, then
+#' allocated to individuals by \code{prop_ing_hogar}. The script writes
+#' \code{data/enut-ii-raw.dta} plus \code{data/enut-ii-raw.csv}. English copies are
+#' written as \code{data/enut-ii-raw-ENG.dta} and
+#' \code{data/enut-ii-raw-ENG.csv}.
 #'
 #' @source <https://www.ine.gob.cl/enut>
 #' @source <https://www.ine.gob.cl/estadisticas/sociales/ingresos-y-gastos/encuesta-de-presupuestos-familiares>
