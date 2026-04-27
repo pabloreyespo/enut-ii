@@ -1,0 +1,725 @@
+
+Attaching package: ‘dplyr’
+
+The following objects are masked from ‘package:stats’:
+
+    filter, lag
+
+The following objects are masked from ‘package:base’:
+
+    intersect, setdiff, setequal, union
+
+
+Attaching package: ‘lubridate’
+
+The following objects are masked from ‘package:base’:
+
+    date, intersect, setdiff, union
+
+
+Attaching package: ‘reshape2’
+
+The following object is masked from ‘package:tidyr’:
+
+    smiths
+
+
+
+             . ,,                                                            
+            ,      ,,                                                        
+ ,,,,,,    ,         ,,                                                      
+,     ,,  ,            ,,,,.                                                 
+,,     , ,,   ,,,,,,    ,,,                                 //  //           
+  ,     ,,,.   ,,,,,.   ,,      ////                        //  //           
+,,     ,,,,,.           ,,     // //     //////    /////    //  //    /////  
+,,,        ,,           ,      //  //    /    //  //   //   //  //   //   // 
+              ,,       ,      ////////   /    //  //   //   //  //   //   // 
+                ,,   ,,      //     //   /   ///  //   //   //  //   //   // 
+                   ,         //      //  /////      ///      //  //    ///   
+                                         //                                  
+                                         //                                  
+
+Apollo 0.3.6
+https://www.ApolloChoiceModelling.com
+See url for a detailed manual, examples and a user forum.
+Sign up to the user forum to receive updates on new releases.
+
+Please cite Apollo in all written material you produce:
+Hess S, Palma D (2019). "Apollo: a flexible, powerful and customisable
+freeware package for choice model estimation and application." Journal
+of Choice Modelling, 32. doi.org/10.1016/j.jocm.2019.100170
+
+The developers of Apollo acknowledge the substantial support provided by
+the European Research Council (ERC) through the consolidator grant DECISIONS,
+the proof of concept grant APOLLO, and the advanced grant SYNERGY.
+`summarise()` has grouped output by 'folio'. You can override using the
+`.groups` argument.
+     g.alimentos     g.vestimenta        g.cuentas          g.hogar 
+      0.28927303       0.03125651       0.20527382       0.05763299 
+         g.salud     g.transporte g.comunicaciones     g.recreacion 
+      0.08140301       0.11843791       0.08343936       0.06170081 
+     g.educacion   g.restaurantes 
+      0.02470287       0.04687967 
+
+INFORMATION: Your version of Apollo is more than six months old. Using
+  the latest version will ensure you have all current functionality and
+  bug fixes. You can update to the latest version by typing:
+  install.packages("apollo") 
+Apollo ignition sequence completed
+
+outputDirectory provided by user does not exist, so will be created.
+All checks on apollo_control completed.
+All checks on database completed.
+Preparing user-defined functions.
+
+Testing likelihood function...
+INFORMATION: Setting "avail" is missing, so full availability is
+  assumed. 
+
+Overview of choices for FMNL model component :
+                                 alimentos vestimenta  cuentas    hogar
+Times available                   14961.00   14961.00 14961.00 14961.00
+Observations with non-zero share  14865.00   12436.00 14875.00 13110.00
+Average share overall                 0.29       0.03     0.21     0.06
+Average share when available          0.29       0.03     0.21     0.06
+                                    salud transporte comunicaciones recreacion
+Times available                  14961.00   14961.00       14961.00   14961.00
+Observations with non-zero share 12677.00   13217.00       14457.00   14132.00
+Average share overall                0.08       0.12           0.08       0.06
+Average share when available         0.08       0.12           0.08       0.06
+                                 educacion restaurantes
+Times available                   14961.00     14961.00
+Observations with non-zero share   5288.00     10556.00
+Average share overall                 0.02         0.05
+Average share when available          0.02         0.05
+
+Pre-processing likelihood function...
+Creating cluster...
+Preparing workers for multithreading...
+
+Testing influence of parameters
+Starting main estimation
+
+BGW using analytic model derivatives supplied by caller...
+
+
+Iterates will be written to: 
+ output/FMNL-epf-ix_iterations.csv
+    it    nf     F            RELDF    PRELDF    RELDX    MODEL stppar
+     0     1 3.444897558e+04
+     1     4 3.174601664e+04 7.846e-02 1.148e-01 1.00e+00   G   1.90e+01
+     2     5 3.120732702e+04 1.697e-02 6.057e-02 4.86e-01   G   1.03e+01
+     3     7 3.097639232e+04 7.400e-03 5.127e-02 2.99e-01  G-S  5.19e+00
+     4     8 3.015541102e+04 2.650e-02 4.563e-02 1.66e-01   S   2.41e+00
+     5     9 3.013338825e+04 7.303e-04 2.298e-02 1.37e-01   S   1.02e+00
+     6    10 3.002688950e+04 3.534e-03 1.525e-02 6.05e-02   S   1.31e+00
+     7    12 2.987526690e+04 5.050e-03 1.102e-02 3.10e-02   S   3.90e+00
+     8    14 2.981408790e+04 2.048e-03 3.807e-03 1.36e-02   S   1.08e+01
+     9    15 2.978102302e+04 1.109e-03 1.850e-03 1.33e-02   S   3.55e+00
+    10    16 2.977340428e+04 2.558e-04 1.448e-03 1.77e-02   S   2.33e+00
+    11    17 2.975860387e+04 4.971e-04 1.804e-03 3.82e-02   S   1.91e+00
+    12    18 2.973136654e+04 9.153e-04 1.284e-03 3.08e-02   S   1.01e+00
+    13    19 2.971337376e+04 6.052e-04 9.977e-04 2.62e-02   S   9.20e-01
+    14    20 2.971222932e+04 3.852e-05 9.111e-04 3.54e-02   S   6.79e-01
+    15    21 2.969219611e+04 6.742e-04 8.266e-04 1.26e-02   S   1.30e+00
+    16    22 2.968933057e+04 9.651e-05 3.736e-04 1.19e-02   S   1.16e+00
+    17    23 2.968619108e+04 1.057e-04 3.466e-04 2.00e-02   S   7.39e-01
+    18    24 2.967977306e+04 2.162e-04 3.583e-04 1.79e-02   S   6.97e-01
+    19    25 2.967388740e+04 1.983e-04 2.819e-04 1.92e-02   S   6.10e-01
+    20    26 2.967009867e+04 1.277e-04 2.103e-04 1.90e-02   S   5.06e-01
+    21    27 2.966590818e+04 1.412e-04 1.884e-04 1.64e-02   S   4.98e-01
+    22    28 2.966203651e+04 1.305e-04 1.766e-04 1.76e-02   S   4.09e-01
+    23    29 2.965911540e+04 9.848e-05 1.450e-04 1.56e-02   S   4.04e-01
+    24    30 2.965547267e+04 1.228e-04 1.451e-04 1.66e-02   S   3.18e-01
+    25    31 2.965307464e+04 8.086e-05 1.188e-04 1.42e-02   S   3.15e-01
+    26    32 2.965043465e+04 8.903e-05 1.152e-04 1.40e-02   S   2.46e-01
+    27    33 2.964804327e+04 8.065e-05 1.024e-04 1.24e-02   S   2.43e-01
+    28    34 2.964667544e+04 4.614e-05 9.050e-05 1.26e-02   S   1.95e-01
+    29    35 2.964422024e+04 8.282e-05 9.786e-05 1.15e-02   S   1.65e-01
+    30    36 2.964328078e+04 3.169e-05 7.019e-05 9.27e-03   S   1.62e-01
+    31    37 2.964193848e+04 4.528e-05 7.598e-05 9.15e-03   S   1.19e-01
+    32    38 2.964070703e+04 4.154e-05 6.794e-05 7.53e-03   S   1.17e-01
+    33    39 2.964026055e+04 1.506e-05 5.812e-05 8.46e-03   S   8.70e-02
+    34    40 2.963936315e+04 3.028e-05 6.442e-05 6.85e-03   S   7.04e-02
+    35    41 2.963916300e+04 6.753e-06 5.673e-05 8.39e-03   S   5.82e-02
+    36    42 2.963906489e+04 3.310e-06 6.333e-05 7.35e-03   S   4.64e-02
+    37    43 2.963848649e+04 1.951e-05 5.824e-05 5.26e-03   S   1.51e-01
+    38    44 2.963820737e+04 9.418e-06 4.677e-05 4.00e-03   S   1.43e-01
+    39    46 2.963785271e+04 1.197e-05 2.227e-05 1.58e-03   S   5.84e-01
+    40    47 2.963766186e+04 6.439e-06 1.252e-05 2.42e-03   S   3.22e-01
+    41    49 2.963761786e+04 1.485e-06 3.641e-06 5.67e-04   S   7.67e-01
+    42    50 2.963758873e+04 9.828e-07 1.807e-06 6.55e-04   S   3.61e-01
+    43    51 2.963756304e+04 8.670e-07 1.365e-06 7.99e-04   S   2.83e-01
+    44    52 2.963754190e+04 7.133e-07 1.004e-06 8.59e-04   S   2.80e-01
+    45    53 2.963751892e+04 7.752e-07 9.412e-07 9.48e-04   S   2.28e-01
+    46    54 2.963749898e+04 6.727e-07 8.041e-07 8.11e-04   S   2.27e-01
+    47    57 2.963741516e+04 2.828e-06 3.540e-06 4.13e-03   S   3.12e-02
+    48    58 2.963735574e+04 2.005e-06 3.441e-06 4.10e-03   S   2.65e-02
+    49    59 2.963733390e+04 7.368e-07 3.545e-06 4.19e-03   S   2.17e-02
+    50    60 2.963732577e+04 2.745e-07 4.134e-06 4.68e-03   S   1.69e-02
+    51    61 2.963725195e+04 2.491e-06 4.370e-06 2.03e-03   S   3.35e-02
+    52    64 2.963722713e+04 8.375e-07 1.466e-06 3.69e-04   S   8.43e-01
+    53    65 2.963722093e+04 2.092e-07 5.917e-07 4.77e-04   S   3.06e-01
+    54    66 2.963722010e+04 2.790e-08 4.461e-07 3.72e-04   S   1.80e-01
+    55    67 2.963721324e+04 2.315e-07 3.042e-07 2.40e-04   S   3.47e-01
+    56    68 2.963721164e+04 5.413e-08 1.561e-07 2.34e-04   S   2.60e-01
+    57    69 2.963720913e+04 8.474e-08 1.396e-07 2.80e-04   S   2.08e-01
+    58    70 2.963720640e+04 9.196e-08 1.098e-07 2.84e-04   S   2.06e-01
+    59    71 2.963720434e+04 6.955e-08 9.362e-08 3.01e-04   S   1.82e-01
+    60    76 2.963708976e+04 3.866e-06 6.870e-06 2.86e-02   S   1.52e-03
+    61    80 2.963708501e+04 1.600e-07 3.986e-07 1.88e-04   S   5.72e-01
+    62    81 2.963708190e+04 1.051e-07 2.517e-07 2.17e-04   S   2.72e-01
+    63    82 2.963707960e+04 7.754e-08 1.786e-07 2.14e-04   S   1.80e-01
+    64    83 2.963707863e+04 3.272e-08 1.279e-07 2.52e-04   S   1.19e-01
+    65    84 2.963707725e+04 4.660e-08 1.271e-07 2.72e-04   S   9.38e-02
+    66    85 2.963707620e+04 3.562e-08 1.034e-07 2.34e-04   S   7.63e-02
+    67    86 2.963707562e+04 1.935e-08 9.146e-08 2.37e-04   S   5.91e-02
+    68    87 2.963707427e+04 4.555e-08 8.776e-08 2.55e-04   S   4.91e-02
+    69    88 2.963707392e+04 1.191e-08 6.399e-08 3.16e-04   S   4.16e-02
+    70    89 2.963707294e+04 3.292e-08 6.346e-08 2.91e-04   S   3.43e-02
+    71    90 2.963707280e+04 4.971e-09 5.156e-08 3.01e-04   S   2.93e-02
+    72    91 2.963707228e+04 1.753e-08 4.313e-08 1.43e-04   S   6.93e-02
+    73    92 2.963707195e+04 1.118e-08 3.534e-08 1.44e-04   S   6.84e-02
+    74    93 2.963707177e+04 5.927e-09 2.691e-08 1.50e-04   S   5.82e-02
+    75    94 2.963707154e+04 7.799e-09 2.568e-08 1.61e-04   S   4.72e-02
+    76    95 2.963707128e+04 8.900e-09 2.229e-08 1.52e-04   S   4.67e-02
+    77    96 2.963707102e+04 8.587e-09 1.995e-08 1.53e-04   S   4.67e-02
+    78    97 2.963707084e+04 6.185e-09 1.486e-08 1.68e-04   S   3.92e-02
+    79    98 2.963707063e+04 7.130e-09 1.403e-08 1.69e-04   S   3.89e-02
+    80    99 2.963707047e+04 5.435e-09 1.265e-08 1.92e-04   S   3.38e-02
+    81   100 2.963707026e+04 7.087e-09 1.209e-08 1.68e-04   S   3.37e-02
+    82   101 2.963707014e+04 3.875e-09 1.053e-08 1.84e-04   S   2.96e-02
+    83   102 2.963706991e+04 7.854e-09 1.141e-08 1.85e-04   S   2.96e-02
+    84   103 2.963706981e+04 3.207e-09 7.998e-09 1.69e-04   S   2.96e-02
+    85   104 2.963706962e+04 6.465e-09 9.456e-09 1.87e-04   S   2.49e-02
+    86   105 2.963706951e+04 3.728e-09 7.478e-09 1.86e-04   S   2.48e-02
+    87   106 2.963706937e+04 4.776e-09 7.393e-09 1.67e-04   S   2.48e-02
+    88   107 2.963706926e+04 3.826e-09 7.050e-09 1.86e-04   S   2.13e-02
+    89   108 2.963706914e+04 3.803e-09 6.543e-09 1.78e-04   S   2.12e-02
+    90   109 2.963706904e+04 3.546e-09 6.594e-09 1.96e-04   S   1.85e-02
+    91   110 2.963706894e+04 3.446e-09 6.209e-09 1.74e-04   S   1.85e-02
+    92   111 2.963706884e+04 3.303e-09 5.381e-09 1.57e-04   S   1.85e-02
+    93   112 2.963706877e+04 2.113e-09 5.278e-09 1.85e-04   S   1.47e-02
+    94   113 2.963706865e+04 4.189e-09 5.049e-09 1.74e-04   S   1.46e-02
+    95   114 2.963706863e+04 7.087e-10 3.854e-09 1.97e-04   S   1.22e-02
+    96   115 2.963706852e+04 3.568e-09 4.909e-09 2.00e-04   S   1.06e-02
+    97   116 2.963706848e+04 1.527e-09 3.593e-09 1.61e-04   S   1.05e-02
+    98   117 2.963706845e+04 1.132e-09 3.682e-09 1.83e-04   S   8.36e-03
+    99   118 2.963706837e+04 2.672e-09 3.692e-09 1.83e-04   S   7.09e-03
+   100   119 2.963706836e+04 3.550e-10 2.580e-09 1.77e-04   S   7.06e-03
+   101   120 2.963706832e+04 1.365e-09 2.682e-09 2.01e-04   S   4.86e-03
+   102   121 2.963706829e+04 9.391e-10 2.202e-09 1.71e-04   S   3.84e-03
+   103   123 2.963706828e+04 3.227e-10 1.369e-09 8.61e-05   S   8.34e-03
+   104   125 2.963706828e+04 5.772e-11 9.422e-10 4.47e-05   S   1.67e-02
+   105   126 2.963706826e+04 4.507e-10 7.593e-10 1.66e-05   S   5.40e-02
+   106   127 2.963706826e+04 5.924e-11 4.159e-10 1.71e-05   S   5.21e-02
+   107   128 2.963706826e+04 4.363e-11 3.681e-10 2.18e-05   S   2.85e-02
+   108   129 2.963706826e+04 1.361e-10 3.081e-10 2.13e-05   S   2.13e-02
+   109   130 2.963706825e+04 5.857e-11 2.109e-10 1.74e-05   S   2.10e-02
+   110   131 2.963706825e+04 5.940e-11 1.841e-10 2.07e-05   S   1.51e-02
+   111   132 2.963706825e+04 8.130e-11 1.541e-10 2.11e-05   S   1.48e-02
+   112   133 2.963706825e+04 5.572e-11 1.152e-10 2.84e-05   S   1.27e-02
+   113   134 2.963706825e+04 3.507e-11 9.079e-11 3.28e-05   S   9.81e-03
+   114   135 2.963706825e+04 5.422e-11 8.600e-11 2.35e-05   S   9.75e-03
+   115   136 2.963706824e+04 2.779e-11 6.808e-11 2.60e-05   S   7.68e-03
+   116   137 2.963706824e+04 2.735e-11 6.365e-11 2.57e-05   S   6.03e-03
+   117   138 2.963706824e+04 3.700e-11 5.359e-11 3.24e-05   S   6.00e-03
+
+***** Relative function convergence *****
+
+Estimated parameters with approximate standard errors from BHHH matrix:
+                                  Estimate     BHHH se BHH t-ratio (0)
+asc_alimentos                     0.839897     1.18669        0.707765
+bnpersonas_alimentos              0.252448     0.23608        1.069312
+bnmenores_0_5_alimentos          -0.022263     1.94396       -0.011453
+bnmenores_6_11_alimentos         -0.092603     1.49841       -0.061801
+bntrabajadores_alimentos         -0.006192     0.35766       -0.017312
+bnprofesionales_alimentos        -0.019920     4.87753       -0.004084
+bedadpromedio_alimentos           0.024876     0.01597        1.557998
+bq2_alimentos                    -0.203193     0.64603       -0.314528
+bq3_alimentos                    -0.289313     0.79423       -0.364269
+bq4_alimentos                    -0.456147     0.82779       -0.551040
+bq5_alimentos                    -0.695308     0.95444       -0.728497
+bnorte_alimentos                  0.085538     0.72192        0.118486
+bcentro_alimentos                -0.179610     0.61119       -0.293867
+bsur_alimentos                   -0.361576     0.68828       -0.525336
+asc_vestimenta                    0.000000          NA              NA
+bnpersonas_vestimenta             0.000000          NA              NA
+bnmenores_0_5_vestimenta          0.000000          NA              NA
+bnmenores_6_11_vestimenta         0.000000          NA              NA
+bntrabajadores_vestimenta         0.000000          NA              NA
+bnprofesionales_vestimenta        0.000000          NA              NA
+bedadpromedio_vestimenta          0.000000          NA              NA
+bq2_vestimenta                    0.000000          NA              NA
+bq3_vestimenta                    0.000000          NA              NA
+bq4_vestimenta                    0.000000          NA              NA
+bq5_vestimenta                    0.000000          NA              NA
+bnorte_vestimenta                 0.000000          NA              NA
+bcentro_vestimenta                0.000000          NA              NA
+bsur_vestimenta                   0.000000          NA              NA
+asc_cuentas                       1.863701     1.16219        1.603617
+bnpersonas_cuentas               -0.001110     0.23568       -0.004708
+bnmenores_0_5_cuentas            -0.040650     1.96596       -0.020677
+bnmenores_6_11_cuentas           -0.062884     1.51649       -0.041467
+bntrabajadores_cuentas           -0.036249     0.35546       -0.101979
+bnprofesionales_cuentas           0.162473     4.78968        0.033922
+bedadpromedio_cuentas             0.009542     0.01566        0.609465
+bq2_cuentas                      -0.176356     0.64140       -0.274954
+bq3_cuentas                      -0.256417     0.78566       -0.326373
+bq4_cuentas                      -0.323664     0.82363       -0.392973
+bq5_cuentas                      -0.506226     0.94893       -0.533467
+bnorte_cuentas                   -0.114727     0.71905       -0.159552
+bcentro_cuentas                  -0.301646     0.60660       -0.497270
+bsur_cuentas                      0.037376     0.67549        0.055332
+asc_hogar                        -0.312733     1.36860       -0.228506
+bnpersonas_hogar                  0.057088     0.27558        0.207152
+bnmenores_0_5_hogar               0.046498     2.22297        0.020917
+bnmenores_6_11_hogar             -0.057605     1.71105       -0.033666
+bntrabajadores_hogar             -0.096604     0.40934       -0.236000
+bnprofesionales_hogar             0.241605     4.63877        0.052084
+bedadpromedio_hogar               0.018400     0.01773        1.037645
+bq2_hogar                         0.051960     0.73948        0.070265
+bq3_hogar                         0.161210     0.90446        0.178239
+bq4_hogar                         0.222597     0.92916        0.239568
+bq5_hogar                         0.467452     1.04095        0.449063
+bnorte_hogar                     -0.050648     0.81978       -0.061782
+bcentro_hogar                    -0.096041     0.68836       -0.139522
+bsur_hogar                       -0.013951     0.76822       -0.018160
+asc_salud                        -0.457766     1.22914       -0.372428
+bnpersonas_salud                  0.094152     0.24729        0.380741
+bnmenores_0_5_salud              -0.063715     2.12687       -0.029957
+bnmenores_6_11_salud             -0.041196     1.65823       -0.024843
+bntrabajadores_salud             -0.120384     0.37500       -0.321025
+bnprofesionales_salud             0.074615     4.81147        0.015508
+bedadpromedio_salud               0.027626     0.01641        1.683856
+bq2_salud                         0.170393     0.67190        0.253598
+bq3_salud                         0.228452     0.81984        0.278654
+bq4_salud                         0.419474     0.86323        0.485938
+bq5_salud                         0.571967     0.98233        0.582255
+bnorte_salud                     -0.205371     0.75755       -0.271100
+bcentro_salud                    -0.152492     0.63107       -0.241640
+bsur_salud                       -0.187673     0.70468       -0.266324
+asc_transporte                    0.706752     1.18251        0.597671
+bnpersonas_transporte             0.050276     0.23700        0.212133
+bnmenores_0_5_transporte         -0.164787     1.87596       -0.087841
+bnmenores_6_11_transporte         0.036883     1.44343        0.025552
+bntrabajadores_transporte         0.056674     0.35732        0.158611
+bnprofesionales_transporte        0.099206     4.60633        0.021537
+bedadpromedio_transporte          0.004175     0.01594        0.261898
+bq2_transporte                    0.153675     0.65489        0.234660
+bq3_transporte                    0.264489     0.79507        0.332660
+bq4_transporte                    0.396447     0.82769        0.478981
+bq5_transporte                    0.487462     0.95155        0.512284
+bnorte_transporte                 0.125230     0.73094        0.171328
+bcentro_transporte                0.026701     0.61153        0.043662
+bsur_transporte                   0.076481     0.68152        0.112220
+asc_comunicaciones                0.335645     1.36399        0.246076
+bnpersonas_comunicaciones         0.079199     0.27568        0.287281
+bnmenores_0_5_comunicaciones     -0.074180     2.14324       -0.034611
+bnmenores_6_11_comunicaciones    -0.062785     1.66051       -0.037811
+bntrabajadores_comunicaciones    -0.008556     0.41784       -0.020477
+bnprofesionales_comunicaciones    0.199297     4.76634        0.041813
+bedadpromedio_comunicaciones      0.012128     0.01825        0.664673
+bq2_comunicaciones               -0.025354     0.75223       -0.033705
+bq3_comunicaciones               -0.036733     0.91786       -0.040020
+bq4_comunicaciones               -0.098575     0.97353       -0.101255
+bq5_comunicaciones               -0.217122     1.10420       -0.196634
+bnorte_comunicaciones             0.145809     0.83582        0.174449
+bcentro_comunicaciones           -0.013716     0.70931       -0.019337
+bsur_comunicaciones               0.084433     0.78805        0.107142
+asc_recreacion                    0.490997     1.31843        0.372411
+bnpersonas_recreacion            -0.068042     0.26410       -0.257638
+bnmenores_0_5_recreacion         -0.128231     2.16500       -0.059229
+bnmenores_6_11_recreacion         0.034751     1.67875        0.020701
+bntrabajadores_recreacion         0.022032     0.40119        0.054917
+bnprofesionales_recreacion        0.123355     4.99044        0.024718
+bedadpromedio_recreacion          0.001262     0.01796        0.070251
+bq2_recreacion                    0.219400     0.74370        0.295013
+bq3_recreacion                    0.451093     0.89079        0.506397
+bq4_recreacion                    0.618661     0.92215        0.670887
+bq5_recreacion                    0.922183     1.02272        0.901698
+bnorte_recreacion                -0.024208     0.80008       -0.030257
+bcentro_recreacion               -0.172507     0.67982       -0.253752
+bsur_recreacion                  -0.178141     0.76678       -0.232324
+asc_educacion                     0.026443     1.31576        0.020097
+bnpersonas_educacion              0.154902     0.26019        0.595340
+bnmenores_0_5_educacion          -0.147489     2.01929       -0.073040
+bnmenores_6_11_educacion         -0.032495     1.54845       -0.020986
+bntrabajadores_educacion         -0.326124     0.39240       -0.831096
+bnprofesionales_educacion         0.236786     4.58500        0.051644
+bedadpromedio_educacion          -0.027664     0.02135       -1.295619
+bq2_educacion                     0.155717     0.77119        0.201917
+bq3_educacion                     0.579817     0.88831        0.652718
+bq4_educacion                     0.853222     0.92447        0.922930
+bq5_educacion                     1.515196     1.02992        1.471173
+bnorte_educacion                  0.088044     0.79362        0.110940
+bcentro_educacion                -0.107106     0.68749       -0.155793
+bsur_educacion                   -0.150488     0.76480       -0.196768
+asc_restaurantes                  0.320255     1.33569        0.239767
+bnpersonas_restaurantes          -0.037407     0.26502       -0.141148
+bnmenores_0_5_restaurantes       -0.157504     2.21211       -0.071201
+bnmenores_6_11_restaurantes      -0.019135     1.71644       -0.011148
+bntrabajadores_restaurantes       0.058166     0.39776        0.146234
+bnprofesionales_restaurantes      0.279871     4.67811        0.059826
+bedadpromedio_restaurantes        0.002154     0.01801        0.119614
+bq2_restaurantes                  0.115572     0.73886        0.156420
+bq3_restaurantes                  0.306265     0.88436        0.346312
+bq4_restaurantes                  0.452429     0.93417        0.484310
+bq5_restaurantes                  0.706607     1.04201        0.678117
+bnorte_restaurantes               0.073682     0.78821        0.093480
+bcentro_restaurantes             -0.445650     0.69860       -0.637923
+bsur_restaurantes                -0.730113     0.80668       -0.905086
+
+Final LL: -29637.0682
+
+Calculating log-likelihood at equal shares (LL(0)) for applicable
+  models...
+Calculating log-likelihood at observed shares from estimation data
+  (LL(c)) for applicable models...
+Calculating LL of each model component...
+Calculating other model fit measures
+Computing covariance matrix using numerical jacobian of analytical
+  gradient.
+ 0%....25%....50%....75%....100%
+Negative definite Hessian with maximum eigenvalue: -0.410309
+
+Your model was estimated using the BGW algorithm. Please acknowledge
+  this by citing Bunch et al. (1993) - doi.org/10.1145/151271.151279
+
+Please acknowledge the use of Apollo by citing Hess & Palma (2019) -
+  doi.org/10.1016/j.jocm.2019.100170
+Model run by preyes using Apollo 0.3.6 on R 4.4.0 for Linux.
+Please acknowledge the use of Apollo by citing Hess & Palma (2019)
+  DOI 10.1016/j.jocm.2019.100170
+  www.ApolloChoiceModelling.com
+
+Model name                                  : FMNL-epf-ix
+Model description                           : Fractional MNL model on time use data
+Model run at                                : 2026-04-21 03:11:41.99222
+Estimation method                           : bgw
+Estimation diagnosis                        : Relative function convergence
+Optimisation diagnosis                      : Maximum found
+     hessian properties                     : Negative definite
+     maximum eigenvalue                     : -0.410309
+     reciprocal of condition number         : 5.07274e-08
+Number of individuals                       : 14961
+Number of rows in database                  : 14961
+Number of modelled outcomes                 : 14961
+
+Number of cores used                        :  44 
+Model without mixing
+
+LL(start)                                   : -34448.98
+LL at equal shares, LL(0)                   : -34448.98
+LL at observed shares, LL(C)                : NA
+LL(final)                                   : -29637.07
+Rho-squared vs equal shares                  :  0.1397 
+Adj.Rho-squared vs equal shares              :  0.136 
+Rho-squared vs observed shares               :  Not applicable 
+Adj.Rho-squared vs observed shares           :  Not applicable 
+AIC                                         :  59526.14 
+BIC                                         :  60485.4 
+
+Estimated parameters                        : 126
+Time taken (hh:mm:ss)                       :  00:06:38.62 
+     pre-estimation                         :  00:00:19.99 
+     estimation                             :  00:01:33.83 
+     post-estimation                        :  00:04:44.79 
+Iterations                                  :  118  
+
+Unconstrained optimisation.
+
+Estimates:
+                                  Estimate        s.e.   t.rat.(0)    Rob.s.e.
+asc_alimentos                     0.839897    0.242697     3.46068    0.052391
+bnpersonas_alimentos              0.252448    0.045713     5.52250    0.009518
+bnmenores_0_5_alimentos          -0.022263    0.298086    -0.07469    0.051850
+bnmenores_6_11_alimentos         -0.092603    0.233061    -0.39733    0.040853
+bntrabajadores_alimentos         -0.006192    0.069263    -0.08940    0.014264
+bnprofesionales_alimentos        -0.019920    0.554418    -0.03593    0.070245
+bedadpromedio_alimentos           0.024876    0.003489     7.13000  8.0286e-04
+bq2_alimentos                    -0.203193    0.142192    -1.42901    0.032708
+bq3_alimentos                    -0.289313    0.153865    -1.88030    0.032189
+bq4_alimentos                    -0.456147    0.161348    -2.82710    0.033835
+bq5_alimentos                    -0.695308    0.172730    -4.02541    0.034464
+bnorte_alimentos                  0.085538    0.144499     0.59196    0.030734
+bcentro_alimentos                -0.179610    0.122553    -1.46556    0.025852
+bsur_alimentos                   -0.361576    0.142917    -2.52998    0.031338
+asc_vestimenta                    0.000000          NA          NA          NA
+bnpersonas_vestimenta             0.000000          NA          NA          NA
+bnmenores_0_5_vestimenta          0.000000          NA          NA          NA
+bnmenores_6_11_vestimenta         0.000000          NA          NA          NA
+bntrabajadores_vestimenta         0.000000          NA          NA          NA
+bnprofesionales_vestimenta        0.000000          NA          NA          NA
+bedadpromedio_vestimenta          0.000000          NA          NA          NA
+bq2_vestimenta                    0.000000          NA          NA          NA
+bq3_vestimenta                    0.000000          NA          NA          NA
+bq4_vestimenta                    0.000000          NA          NA          NA
+bq5_vestimenta                    0.000000          NA          NA          NA
+bnorte_vestimenta                 0.000000          NA          NA          NA
+bcentro_vestimenta                0.000000          NA          NA          NA
+bsur_vestimenta                   0.000000          NA          NA          NA
+asc_cuentas                       1.863701    0.245467     7.59245    0.059208
+bnpersonas_cuentas               -0.001110    0.046877    -0.02367    0.010711
+bnmenores_0_5_cuentas            -0.040650    0.310821    -0.13078    0.064049
+bnmenores_6_11_cuentas           -0.062884    0.243634    -0.25811    0.050480
+bntrabajadores_cuentas           -0.036249    0.070868    -0.51151    0.016113
+bnprofesionales_cuentas           0.162473    0.545960     0.29759    0.076803
+bedadpromedio_cuentas             0.009542    0.003537     2.69751  8.9020e-04
+bq2_cuentas                      -0.176356    0.144438    -1.22098    0.035437
+bq3_cuentas                      -0.256417    0.156696    -1.63639    0.035901
+bq4_cuentas                      -0.323664    0.164046    -1.97301    0.037258
+bq5_cuentas                      -0.506226    0.175714    -2.88096    0.038019
+bnorte_cuentas                   -0.114727    0.148190    -0.77419    0.034321
+bcentro_cuentas                  -0.301646    0.125349    -2.40644    0.028843
+bsur_cuentas                      0.037376    0.143019     0.26134    0.033472
+asc_hogar                        -0.312733    0.289078    -1.08183    0.065599
+bnpersonas_hogar                  0.057088    0.054159     1.05407    0.011290
+bnmenores_0_5_hogar               0.046498    0.361653     0.12857    0.068583
+bnmenores_6_11_hogar             -0.057605    0.283714    -0.20304    0.054394
+bntrabajadores_hogar             -0.096604    0.081610    -1.18373    0.017304
+bnprofesionales_hogar             0.241605    0.576040     0.41942    0.105199
+bedadpromedio_hogar               0.018400    0.004064     4.52749    0.001046
+bq2_hogar                         0.051960    0.170388     0.30495    0.041499
+bq3_hogar                         0.161210    0.183206     0.87994    0.040659
+bq4_hogar                         0.222597    0.190302     1.16970    0.042857
+bq5_hogar                         0.467452    0.198030     2.36051    0.042547
+bnorte_hogar                     -0.050648    0.171636    -0.29509    0.038440
+bcentro_hogar                    -0.096041    0.144614    -0.66412    0.032452
+bsur_hogar                       -0.013951    0.165861    -0.08411    0.038344
+asc_salud                        -0.457766    0.275867    -1.65937    0.072164
+bnpersonas_salud                  0.094152    0.051443     1.83022    0.012420
+bnmenores_0_5_salud              -0.063715    0.358826    -0.17757    0.077708
+bnmenores_6_11_salud             -0.041196    0.282423    -0.14587    0.060577
+bntrabajadores_salud             -0.120384    0.077462    -1.55410    0.018284
+bnprofesionales_salud             0.074615    0.575499     0.12965    0.096941
+bedadpromedio_salud               0.027626    0.003863     7.15194    0.001040
+bq2_salud                         0.170393    0.161150     1.05736    0.045373
+bq3_salud                         0.228452    0.174649     1.30806    0.045293
+bq4_salud                         0.419474    0.179960     2.33093    0.044755
+bq5_salud                         0.571967    0.189408     3.01976    0.044454
+bnorte_salud                     -0.205371    0.163886    -1.25314    0.041247
+bcentro_salud                    -0.152492    0.136408    -1.11791    0.034485
+bsur_salud                       -0.187673    0.158690    -1.18264    0.041734
+asc_transporte                    0.706752    0.258989     2.72889    0.067672
+bnpersonas_transporte             0.050276    0.048583     1.03485    0.012168
+bnmenores_0_5_transporte         -0.164787    0.323780    -0.50895    0.088496
+bnmenores_6_11_transporte         0.036883    0.252798     0.14590    0.069712
+bntrabajadores_transporte         0.056674    0.073531     0.77076    0.018491
+bnprofesionales_transporte        0.099206    0.556115     0.17839    0.117033
+bedadpromedio_transporte          0.004175    0.003744     1.11523    0.001031
+bq2_transporte                    0.153675    0.155127     0.99065    0.043322
+bq3_transporte                    0.264489    0.165907     1.59420    0.043865
+bq4_transporte                    0.396447    0.171714     2.30876    0.044788
+bq5_transporte                    0.487462    0.181181     2.69046    0.044256
+bnorte_transporte                 0.125230    0.154324     0.81147    0.037864
+bcentro_transporte                0.026701    0.131011     0.20381    0.033780
+bsur_transporte                   0.076481    0.150700     0.50750    0.040447
+asc_comunicaciones                0.335645    0.270078     1.24277    0.054896
+bnpersonas_comunicaciones         0.079199    0.050911     1.55565    0.009690
+bnmenores_0_5_comunicaciones     -0.074180    0.342347    -0.21668    0.063560
+bnmenores_6_11_comunicaciones    -0.062785    0.269168    -0.23326    0.050170
+bntrabajadores_comunicaciones    -0.008556    0.077056    -0.11104    0.014444
+bnprofesionales_comunicaciones    0.199297    0.580575     0.34328    0.107755
+bedadpromedio_comunicaciones      0.012128    0.003851     3.14967  8.4087e-04
+bq2_comunicaciones               -0.025354    0.157719    -0.16075    0.033699
+bq3_comunicaciones               -0.036733    0.170788    -0.21508    0.033231
+bq4_comunicaciones               -0.098575    0.179170    -0.55018    0.034298
+bq5_comunicaciones               -0.217122    0.192308    -1.12904    0.035427
+bnorte_comunicaciones             0.145809    0.160596     0.90793    0.031378
+bcentro_comunicaciones           -0.013716    0.136897    -0.10019    0.026822
+bsur_comunicaciones               0.084433    0.157003     0.53778    0.031931
+asc_recreacion                    0.490997    0.283639     1.73106    0.064241
+bnpersonas_recreacion            -0.068042    0.053468    -1.27257    0.011643
+bnmenores_0_5_recreacion         -0.128231    0.366170    -0.35019    0.068368
+bnmenores_6_11_recreacion         0.034751    0.286619     0.12125    0.053416
+bntrabajadores_recreacion         0.022032    0.080415     0.27398    0.016903
+bnprofesionales_recreacion        0.123355    0.574807     0.21460    0.081677
+bedadpromedio_recreacion          0.001262    0.004099     0.30793  9.8212e-04
+bq2_recreacion                    0.219400    0.174910     1.25436    0.043202
+bq3_recreacion                    0.451093    0.184262     2.44810    0.041755
+bq4_recreacion                    0.618661    0.189139     3.27093    0.042102
+bq5_recreacion                    0.922183    0.196094     4.70275    0.041940
+bnorte_recreacion                -0.024208    0.167849    -0.14423    0.037109
+bcentro_recreacion               -0.172507    0.143280    -1.20399    0.031737
+bsur_recreacion                  -0.178141    0.165585    -1.07583    0.037331
+asc_educacion                     0.026443    0.354247     0.07465    0.125478
+bnpersonas_educacion              0.154902    0.061949     2.50046    0.018335
+bnmenores_0_5_educacion          -0.147489    0.387732    -0.38039    0.110786
+bnmenores_6_11_educacion         -0.032495    0.302007    -0.10760    0.085778
+bntrabajadores_educacion         -0.326124    0.095890    -3.40103    0.030018
+bnprofesionales_educacion         0.236786    0.615918     0.38444    0.123648
+bedadpromedio_educacion          -0.027664    0.005729    -4.82902    0.001717
+bq2_educacion                     0.155717    0.243141     0.64044    0.095346
+bq3_educacion                     0.579817    0.241091     2.40497    0.088335
+bq4_educacion                     0.853222    0.242227     3.52241    0.085931
+bq5_educacion                     1.515196    0.239183     6.33489    0.078842
+bnorte_educacion                  0.088044    0.201204     0.43759    0.064009
+bcentro_educacion                -0.107106    0.178120    -0.60132    0.056915
+bsur_educacion                   -0.150488    0.206857    -0.72750    0.070159
+asc_restaurantes                  0.320255    0.297271     1.07732    0.073156
+bnpersonas_restaurantes          -0.037407    0.055926    -0.66887    0.013335
+bnmenores_0_5_restaurantes       -0.157504    0.393877    -0.39988    0.090563
+bnmenores_6_11_restaurantes      -0.019135    0.310887    -0.06155    0.071998
+bntrabajadores_restaurantes       0.058166    0.084443     0.68881    0.020050
+bnprofesionales_restaurantes      0.279871    0.575279     0.48650    0.093156
+bedadpromedio_restaurantes        0.002154    0.004311     0.49974    0.001154
+bq2_restaurantes                  0.115572    0.184233     0.62732    0.050987
+bq3_restaurantes                  0.306265    0.193848     1.57992    0.049803
+bq4_restaurantes                  0.452429    0.198567     2.27846    0.048548
+bq5_restaurantes                  0.706607    0.205414     3.43992    0.047966
+bnorte_restaurantes               0.073682    0.170320     0.43261    0.041458
+bcentro_restaurantes             -0.445650    0.152358    -2.92501    0.036181
+bsur_restaurantes                -0.730113    0.186326    -3.91846    0.047279
+                               Rob.t.rat.(0)
+asc_alimentos                        16.0312
+bnpersonas_alimentos                 26.5235
+bnmenores_0_5_alimentos              -0.4294
+bnmenores_6_11_alimentos             -2.2667
+bntrabajadores_alimentos             -0.4341
+bnprofesionales_alimentos            -0.2836
+bedadpromedio_alimentos              30.9846
+bq2_alimentos                        -6.2124
+bq3_alimentos                        -8.9881
+bq4_alimentos                       -13.4814
+bq5_alimentos                       -20.1749
+bnorte_alimentos                      2.7831
+bcentro_alimentos                    -6.9476
+bsur_alimentos                      -11.5378
+asc_vestimenta                            NA
+bnpersonas_vestimenta                     NA
+bnmenores_0_5_vestimenta                  NA
+bnmenores_6_11_vestimenta                 NA
+bntrabajadores_vestimenta                 NA
+bnprofesionales_vestimenta                NA
+bedadpromedio_vestimenta                  NA
+bq2_vestimenta                            NA
+bq3_vestimenta                            NA
+bq4_vestimenta                            NA
+bq5_vestimenta                            NA
+bnorte_vestimenta                         NA
+bcentro_vestimenta                        NA
+bsur_vestimenta                           NA
+asc_cuentas                          31.4772
+bnpersonas_cuentas                   -0.1036
+bnmenores_0_5_cuentas                -0.6347
+bnmenores_6_11_cuentas               -1.2457
+bntrabajadores_cuentas               -2.2496
+bnprofesionales_cuentas               2.1154
+bedadpromedio_cuentas                10.7187
+bq2_cuentas                          -4.9766
+bq3_cuentas                          -7.1422
+bq4_cuentas                          -8.6870
+bq5_cuentas                         -13.3150
+bnorte_cuentas                       -3.3428
+bcentro_cuentas                     -10.4580
+bsur_cuentas                          1.1166
+asc_hogar                            -4.7674
+bnpersonas_hogar                      5.0567
+bnmenores_0_5_hogar                   0.6780
+bnmenores_6_11_hogar                 -1.0590
+bntrabajadores_hogar                 -5.5828
+bnprofesionales_hogar                 2.2967
+bedadpromedio_hogar                  17.5894
+bq2_hogar                             1.2521
+bq3_hogar                             3.9650
+bq4_hogar                             5.1939
+bq5_hogar                            10.9868
+bnorte_hogar                         -1.3176
+bcentro_hogar                        -2.9595
+bsur_hogar                           -0.3638
+asc_salud                            -6.3434
+bnpersonas_salud                      7.5809
+bnmenores_0_5_salud                  -0.8199
+bnmenores_6_11_salud                 -0.6801
+bntrabajadores_salud                 -6.5842
+bnprofesionales_salud                 0.7697
+bedadpromedio_salud                  26.5658
+bq2_salud                             3.7554
+bq3_salud                             5.0438
+bq4_salud                             9.3727
+bq5_salud                            12.8666
+bnorte_salud                         -4.9791
+bcentro_salud                        -4.4220
+bsur_salud                           -4.4969
+asc_transporte                       10.4437
+bnpersonas_transporte                 4.1317
+bnmenores_0_5_transporte             -1.8621
+bnmenores_6_11_transporte             0.5291
+bntrabajadores_transporte             3.0650
+bnprofesionales_transporte            0.8477
+bedadpromedio_transporte              4.0501
+bq2_transporte                        3.5473
+bq3_transporte                        6.0297
+bq4_transporte                        8.8516
+bq5_transporte                       11.0146
+bnorte_transporte                     3.3074
+bcentro_transporte                    0.7904
+bsur_transporte                       1.8909
+asc_comunicaciones                    6.1142
+bnpersonas_comunicaciones             8.1733
+bnmenores_0_5_comunicaciones         -1.1671
+bnmenores_6_11_comunicaciones        -1.2515
+bntrabajadores_comunicaciones        -0.5924
+bnprofesionales_comunicaciones        1.8495
+bedadpromedio_comunicaciones         14.4234
+bq2_comunicaciones                   -0.7523
+bq3_comunicaciones                   -1.1054
+bq4_comunicaciones                   -2.8741
+bq5_comunicaciones                   -6.1287
+bnorte_comunicaciones                 4.6469
+bcentro_comunicaciones               -0.5114
+bsur_comunicaciones                   2.6442
+asc_recreacion                        7.6431
+bnpersonas_recreacion                -5.8440
+bnmenores_0_5_recreacion             -1.8756
+bnmenores_6_11_recreacion             0.6506
+bntrabajadores_recreacion             1.3034
+bnprofesionales_recreacion            1.5103
+bedadpromedio_recreacion              1.2850
+bq2_recreacion                        5.0784
+bq3_recreacion                       10.8034
+bq4_recreacion                       14.6943
+bq5_recreacion                       21.9883
+bnorte_recreacion                    -0.6524
+bcentro_recreacion                   -5.4355
+bsur_recreacion                      -4.7719
+asc_educacion                         0.2107
+bnpersonas_educacion                  8.4482
+bnmenores_0_5_educacion              -1.3313
+bnmenores_6_11_educacion             -0.3788
+bntrabajadores_educacion            -10.8643
+bnprofesionales_educacion             1.9150
+bedadpromedio_educacion             -16.1104
+bq2_educacion                         1.6332
+bq3_educacion                         6.5638
+bq4_educacion                         9.9291
+bq5_educacion                        19.2181
+bnorte_educacion                      1.3755
+bcentro_educacion                    -1.8819
+bsur_educacion                       -2.1449
+asc_restaurantes                      4.3777
+bnpersonas_restaurantes              -2.8052
+bnmenores_0_5_restaurantes           -1.7392
+bnmenores_6_11_restaurantes          -0.2658
+bntrabajadores_restaurantes           2.9010
+bnprofesionales_restaurantes          3.0043
+bedadpromedio_restaurantes            1.8665
+bq2_restaurantes                      2.2667
+bq3_restaurantes                      6.1495
+bq4_restaurantes                      9.3193
+bq5_restaurantes                     14.7314
+bnorte_restaurantes                   1.7773
+bcentro_restaurantes                -12.3171
+bsur_restaurantes                   -15.4426
+
+Model output saved to output/FMNL-epf-ix_output.txt 
+Estimates saved to output/FMNL-epf-ix_estimates.csv 
+Model object saved to output/FMNL-epf-ix.rds 
+Error in value[[3L]](cond) : 
+  INPUT ISSUE - Cannot find or open /home/preyes/enut-ii/output/FMNL_model.rds
+Calls: apollo_loadModel ... tryCatch -> tryCatchList -> tryCatchOne -> <Anonymous>
+In addition: Warning message:
+In gzfile(file, "rb") :
+  cannot open compressed file '/home/preyes/enut-ii/output/FMNL_model.rds', probable reason 'No such file or directory'
+Execution halted
