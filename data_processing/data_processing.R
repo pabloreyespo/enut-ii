@@ -95,9 +95,15 @@ data_enut_G <- data_enut_G %>%
     Ef_restaurants = restaurantes,
     Ef_communications = comunicaciones,
     Ef_clothing = vestimenta,
-    Ec = cuentas + hogar + salud + transporte + educacion + savings
+    Ec_cuentas = cuentas,
+    Ec_hogar = hogar,
+    Ec_salud = salud,
+    Ec_transporte = transporte,
+    Ec_educacion = educacion,
+    savings = savings,
+    total_expenses = total_expenses
   ) %>%
-  dplyr::select(-c(alimentos, recreacion, restaurantes, comunicaciones, vestimenta, cuentas, hogar, salud, transporte, educacion, savings, total_expenses))
+  dplyr::select(-c(alimentos, recreacion, restaurantes, comunicaciones, vestimenta, cuentas, hogar, salud, transporte, educacion))
 
 haven::write_dta(data_raw_G, "data/enut-ii-raw.dta")
 haven::write_dta(data_enut_G, "data/enut-ii.dta")
