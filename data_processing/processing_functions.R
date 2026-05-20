@@ -297,6 +297,7 @@ na_completion <- function(data) {
       c(edad, sexo), function(x) ifelse(is.na(x), 85, x)
     )) %>%
     filter(if_all(c("cp1_t_ds", "cp1_t_fds", "t_to_ds", "t_to_fds"), ~ !.x %in% 96)) %>%
+    filter(!is.na(nivel_educ)) %>%
     # filter(if_all(n_linea_p:te_ayuda_cercanos, ~ !.x  %in% 96)) %>%
     # filter(l110_1_1 != 1 & l122_1_1 != 1) %>% # en cama enfermos
     # filter(l111_1_1 != 1 & l123_1_1 != 1) %>%# pasaron cosas fuera de lo común
