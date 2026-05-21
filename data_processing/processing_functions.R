@@ -15,7 +15,7 @@ acts_corregidas <- c(
   # "t_tcnr_nna",  #(niños y adolescentes)
   # "t_tcnr_15_65",
   # "t_tcnr_66",
-  # "t_tncr_psdf"
+  # "t_tcnr_psdf"
   "t_tdnr_psc",
   "t_tdnr_lv",
   "t_tdnr_lrc",
@@ -43,14 +43,14 @@ acts_corregidas <- c(
 # Alternative care time decomposition (NOT included in acts_corregidas to avoid double-counting)
 # These variables represent care time by age group of care recipient:
 #   t_tcnr_nna = t_tcnr_0_4 + t_tcnr_5_14
-#   t_tcnr_nna + t_tcnr_15_65 + t_tcnr_66 + t_tncr_psdf = t_tcnr_ce + t_tcnr_re + t_tcnr_oac
+#   t_tcnr_nna + t_tcnr_15_65 + t_tcnr_66 + t_tcnr_psdf = t_tcnr_ce + t_tcnr_re + t_tcnr_oac
 acts_care_alternatives <- c(
   "t_tcnr_0_4",
   "t_tcnr_5_14",
   "t_tcnr_nna",   # derived: t_tcnr_0_4 + t_tcnr_5_14
   "t_tcnr_15_65",
   "t_tcnr_66",
-  "t_tncr_psdf"
+  "t_tcnr_psdf"
 )
 
 t_agregados <- c(
@@ -278,7 +278,7 @@ na_completion <- function(data) {
     "t_tcnr_5_14", # cuidado a menores de 5-14 anos
     "t_tcnr_15_65", # cuidado a personas de 15-65 anos
     "t_tcnr_66", # cuidado a personas de 66+ anos
-    "t_tncr_psdf", # cuidado a personas con discapacidad
+    "t_tcnr_psdf", # cuidado a personas con discapacidad
     "t_tdnr_psc",
     "t_tdnr_lv",
     "t_tdnr_lrc",
@@ -862,7 +862,7 @@ rename_to_english_raw <- function(data) {
     t_care_children_teens    = "t_tcnr_nna",
     t_care_15_65             = "t_tcnr_15_65",
     t_care_66_plus           = "t_tcnr_66",
-    t_care_disability        = "t_tncr_psdf",
+    t_care_disability        = "t_tcnr_psdf",
     t_domestic_meals         = "t_tdnr_psc",
     t_domestic_cleaning      = "t_tdnr_lv",
     t_domestic_laundry       = "t_tdnr_lrc",
