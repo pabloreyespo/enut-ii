@@ -88,11 +88,11 @@ data_ingresos <- data_ingresos %>% # sprincipal: jefe de hogar
   dplyr::select(-c(percentil, fe)) %>%
   group_by(folio) %>%
   summarise(
-    n_menores_0_5 = sum(edad < 6),
+    n_menores_0_4 = sum(edad <= 4),
     n_personas = max(npersonas),
     macrozona = max(macrozona),
-    n_menores_6_11 = sum(edad >= 6 & edad < 12),
-    n_menores_12_17 = sum(edad >= 12 & edad < 18),
+    n_menores_5_14 = sum(edad >= 5 & edad <= 14),
+    n_personas_15_65 = sum(edad >= 15 & edad <= 65),
     n_trabajadores = sum((ing_disp_td + ing_disp_ti) > 0),
     income_person_week = mean(ing_disp_hog_hd) / n(),
     edad_promedio = mean(edad),
@@ -150,8 +150,8 @@ gastos <- data_ambos %>%
   mutate(id_hogar = 1:n()) %>%
   dplyr::select(
     folio, id_hogar, all_of(vector_gastos), savings, n_personas,
-    macrozona, quintil, n_menores_0_5,
-    n_menores_6_11, n_menores_12_17, n_trabajadores, edad_promedio,
+    macrozona, quintil, n_menores_0_4,
+    n_menores_5_14, n_personas_15_65, n_trabajadores, edad_promedio,
     n_profesionales, income_person_week, ingreso_hogar
   )
 
@@ -161,9 +161,9 @@ gastos[, c(vector_gastos, "ingreso_hogar", "savings", "income_person_week")] <-
 gastos <- gastos %>%
   mutate(
     n_personas_cut = case_when(n_personas >= 7 ~ 7, T ~ n_personas),
-    n_menores_0_5_cut = case_when(n_menores_0_5 >= 3 ~ 3, T ~ n_menores_6_11),
-    n_menores_6_11_cut = case_when(n_menores_6_11 >= 2 ~ 3, T ~ n_menores_6_11),
-    n_menores_12_17_cut = case_when(n_menores_12_17 >= 2 ~ 3, T ~ n_menores_12_17),
+    n_menores_0_4_cut = case_when(n_menores_0_4 >= 3 ~ 3, T ~ n_menores_0_4),
+    n_menores_5_14_cut = case_when(n_menores_5_14 >= 2 ~ 3, T ~ n_menores_5_14),
+    n_personas_15_65_cut = case_when(n_personas_15_65 >= 3 ~ 3, T ~ n_personas_15_65),
     n_trabajadores_cut = case_when(n_trabajadores >= 3 ~ 3, T ~ n_trabajadores),
     n_profesionales_cut = case_when(n_profesionales >= 2 ~ 3, T ~ n_profesionales)
   )
@@ -193,20 +193,20 @@ database <- gastos
 database[, names(codigos)] <- database[, names(codigos)] / rowSums(database[, names(codigos)])
 
 apollo_beta <- c(
-  asc_alimentos = 0, bnpersonas_alimentos = 0, bnmenores_0_5_alimentos = 0, bnmenores_6_11_alimentos = 0, bntrabajadores_alimentos = 0, bnprofesionales_alimentos = 0, bedadpromedio_alimentos = 0, bq2_alimentos = 0, bq3_alimentos = 0, bq4_alimentos = 0, bq5_alimentos = 0, bnorte_alimentos = 0, bcentro_alimentos = 0, bsur_alimentos = 0,
-  asc_vestimenta = 0, bnpersonas_vestimenta = 0, bnmenores_0_5_vestimenta = 0, bnmenores_6_11_vestimenta = 0, bntrabajadores_vestimenta = 0, bnprofesionales_vestimenta = 0, bedadpromedio_vestimenta = 0, bq2_vestimenta = 0, bq3_vestimenta = 0, bq4_vestimenta = 0, bq5_vestimenta = 0, bnorte_vestimenta = 0, bcentro_vestimenta = 0, bsur_vestimenta = 0,
-  asc_cuentas = 0, bnpersonas_cuentas = 0, bnmenores_0_5_cuentas = 0, bnmenores_6_11_cuentas = 0, bntrabajadores_cuentas = 0, bnprofesionales_cuentas = 0, bedadpromedio_cuentas = 0, bq2_cuentas = 0, bq3_cuentas = 0, bq4_cuentas = 0, bq5_cuentas = 0, bnorte_cuentas = 0, bcentro_cuentas = 0, bsur_cuentas = 0,
-  asc_hogar = 0, bnpersonas_hogar = 0, bnmenores_0_5_hogar = 0, bnmenores_6_11_hogar = 0, bntrabajadores_hogar = 0, bnprofesionales_hogar = 0, bedadpromedio_hogar = 0, bq2_hogar = 0, bq3_hogar = 0, bq4_hogar = 0, bq5_hogar = 0, bnorte_hogar = 0, bcentro_hogar = 0, bsur_hogar = 0,
-  asc_salud = 0, bnpersonas_salud = 0, bnmenores_0_5_salud = 0, bnmenores_6_11_salud = 0, bntrabajadores_salud = 0, bnprofesionales_salud = 0, bedadpromedio_salud = 0, bq2_salud = 0, bq3_salud = 0, bq4_salud = 0, bq5_salud = 0, bnorte_salud = 0, bcentro_salud = 0, bsur_salud = 0,
-  asc_transporte = 0, bnpersonas_transporte = 0, bnmenores_0_5_transporte = 0, bnmenores_6_11_transporte = 0, bntrabajadores_transporte = 0, bnprofesionales_transporte = 0, bedadpromedio_transporte = 0, bq2_transporte = 0, bq3_transporte = 0, bq4_transporte = 0, bq5_transporte = 0, bnorte_transporte = 0, bcentro_transporte = 0, bsur_transporte = 0,
-  asc_comunicaciones = 0, bnpersonas_comunicaciones = 0, bnmenores_0_5_comunicaciones = 0, bnmenores_6_11_comunicaciones = 0, bntrabajadores_comunicaciones = 0, bnprofesionales_comunicaciones = 0, bedadpromedio_comunicaciones = 0, bq2_comunicaciones = 0, bq3_comunicaciones = 0, bq4_comunicaciones = 0, bq5_comunicaciones = 0, bnorte_comunicaciones = 0, bcentro_comunicaciones = 0, bsur_comunicaciones = 0,
-  asc_recreacion = 0, bnpersonas_recreacion = 0, bnmenores_0_5_recreacion = 0, bnmenores_6_11_recreacion = 0, bntrabajadores_recreacion = 0, bnprofesionales_recreacion = 0, bedadpromedio_recreacion = 0, bq2_recreacion = 0, bq3_recreacion = 0, bq4_recreacion = 0, bq5_recreacion = 0, bnorte_recreacion = 0, bcentro_recreacion = 0, bsur_recreacion = 0,
-  asc_educacion = 0, bnpersonas_educacion = 0, bnmenores_0_5_educacion = 0, bnmenores_6_11_educacion = 0, bntrabajadores_educacion = 0, bnprofesionales_educacion = 0, bedadpromedio_educacion = 0, bq2_educacion = 0, bq3_educacion = 0, bq4_educacion = 0, bq5_educacion = 0, bnorte_educacion = 0, bcentro_educacion = 0, bsur_educacion = 0,
-  asc_restaurantes = 0, bnpersonas_restaurantes = 0, bnmenores_0_5_restaurantes = 0, bnmenores_6_11_restaurantes = 0, bntrabajadores_restaurantes = 0, bnprofesionales_restaurantes = 0, bedadpromedio_restaurantes = 0, bq2_restaurantes = 0, bq3_restaurantes = 0, bq4_restaurantes = 0, bq5_restaurantes = 0, bnorte_restaurantes = 0, bcentro_restaurantes = 0, bsur_restaurantes = 0
+  asc_alimentos = 0, bnpersonas_alimentos = 0, bnmenores_0_4_alimentos = 0, bnmenores_5_14_alimentos = 0, bnpersonas_15_65_alimentos = 0, bntrabajadores_alimentos = 0, bnprofesionales_alimentos = 0, bedadpromedio_alimentos = 0, bq2_alimentos = 0, bq3_alimentos = 0, bq4_alimentos = 0, bq5_alimentos = 0, bnorte_alimentos = 0, bcentro_alimentos = 0, bsur_alimentos = 0,
+  asc_vestimenta = 0, bnpersonas_vestimenta = 0, bnmenores_0_4_vestimenta = 0, bnmenores_5_14_vestimenta = 0, bnpersonas_15_65_vestimenta = 0, bntrabajadores_vestimenta = 0, bnprofesionales_vestimenta = 0, bedadpromedio_vestimenta = 0, bq2_vestimenta = 0, bq3_vestimenta = 0, bq4_vestimenta = 0, bq5_vestimenta = 0, bnorte_vestimenta = 0, bcentro_vestimenta = 0, bsur_vestimenta = 0,
+  asc_cuentas = 0, bnpersonas_cuentas = 0, bnmenores_0_4_cuentas = 0, bnmenores_5_14_cuentas = 0, bnpersonas_15_65_cuentas = 0, bntrabajadores_cuentas = 0, bnprofesionales_cuentas = 0, bedadpromedio_cuentas = 0, bq2_cuentas = 0, bq3_cuentas = 0, bq4_cuentas = 0, bq5_cuentas = 0, bnorte_cuentas = 0, bcentro_cuentas = 0, bsur_cuentas = 0,
+  asc_hogar = 0, bnpersonas_hogar = 0, bnmenores_0_4_hogar = 0, bnmenores_5_14_hogar = 0, bnpersonas_15_65_hogar = 0, bntrabajadores_hogar = 0, bnprofesionales_hogar = 0, bedadpromedio_hogar = 0, bq2_hogar = 0, bq3_hogar = 0, bq4_hogar = 0, bq5_hogar = 0, bnorte_hogar = 0, bcentro_hogar = 0, bsur_hogar = 0,
+  asc_salud = 0, bnpersonas_salud = 0, bnmenores_0_4_salud = 0, bnmenores_5_14_salud = 0, bnpersonas_15_65_salud = 0, bntrabajadores_salud = 0, bnprofesionales_salud = 0, bedadpromedio_salud = 0, bq2_salud = 0, bq3_salud = 0, bq4_salud = 0, bq5_salud = 0, bnorte_salud = 0, bcentro_salud = 0, bsur_salud = 0,
+  asc_transporte = 0, bnpersonas_transporte = 0, bnmenores_0_4_transporte = 0, bnmenores_5_14_transporte = 0, bnpersonas_15_65_transporte = 0, bntrabajadores_transporte = 0, bnprofesionales_transporte = 0, bedadpromedio_transporte = 0, bq2_transporte = 0, bq3_transporte = 0, bq4_transporte = 0, bq5_transporte = 0, bnorte_transporte = 0, bcentro_transporte = 0, bsur_transporte = 0,
+  asc_comunicaciones = 0, bnpersonas_comunicaciones = 0, bnmenores_0_4_comunicaciones = 0, bnmenores_5_14_comunicaciones = 0, bnpersonas_15_65_comunicaciones = 0, bntrabajadores_comunicaciones = 0, bnprofesionales_comunicaciones = 0, bedadpromedio_comunicaciones = 0, bq2_comunicaciones = 0, bq3_comunicaciones = 0, bq4_comunicaciones = 0, bq5_comunicaciones = 0, bnorte_comunicaciones = 0, bcentro_comunicaciones = 0, bsur_comunicaciones = 0,
+  asc_recreacion = 0, bnpersonas_recreacion = 0, bnmenores_0_4_recreacion = 0, bnmenores_5_14_recreacion = 0, bnpersonas_15_65_recreacion = 0, bntrabajadores_recreacion = 0, bnprofesionales_recreacion = 0, bedadpromedio_recreacion = 0, bq2_recreacion = 0, bq3_recreacion = 0, bq4_recreacion = 0, bq5_recreacion = 0, bnorte_recreacion = 0, bcentro_recreacion = 0, bsur_recreacion = 0,
+  asc_educacion = 0, bnpersonas_educacion = 0, bnmenores_0_4_educacion = 0, bnmenores_5_14_educacion = 0, bnpersonas_15_65_educacion = 0, bntrabajadores_educacion = 0, bnprofesionales_educacion = 0, bedadpromedio_educacion = 0, bq2_educacion = 0, bq3_educacion = 0, bq4_educacion = 0, bq5_educacion = 0, bnorte_educacion = 0, bcentro_educacion = 0, bsur_educacion = 0,
+  asc_restaurantes = 0, bnpersonas_restaurantes = 0, bnmenores_0_4_restaurantes = 0, bnmenores_5_14_restaurantes = 0, bnpersonas_15_65_restaurantes = 0, bntrabajadores_restaurantes = 0, bnprofesionales_restaurantes = 0, bedadpromedio_restaurantes = 0, bq2_restaurantes = 0, bq3_restaurantes = 0, bq4_restaurantes = 0, bq5_restaurantes = 0, bnorte_restaurantes = 0, bcentro_restaurantes = 0, bsur_restaurantes = 0
 )
 
 apollo_fixed <- c(
-  "asc_vestimenta", "bnpersonas_vestimenta", "bnmenores_0_5_vestimenta", "bnmenores_6_11_vestimenta", "bntrabajadores_vestimenta",
+  "asc_vestimenta", "bnpersonas_vestimenta", "bnmenores_0_4_vestimenta", "bnmenores_5_14_vestimenta", "bntrabajadores_vestimenta",
   "bnprofesionales_vestimenta", "bedadpromedio_vestimenta", "bq2_vestimenta", "bq3_vestimenta", "bq4_vestimenta", "bq5_vestimenta",
   "bnorte_vestimenta", "bcentro_vestimenta", "bsur_vestimenta"
 )
@@ -221,8 +221,9 @@ apollo_probabilities <- function(apollo_beta, apollo_inputs, functionality = "es
   for (alt in c("alimentos", "vestimenta", "cuentas", "hogar", "salud", "transporte", "comunicaciones", "recreacion", "educacion", "restaurantes")) {
     V[[alt]] <- get(paste0("asc_", alt)) +
       get(paste0("bnpersonas_", alt)) * n_personas_cut + # (n_personas >= 4 )                   +
-      get(paste0("bnmenores_0_5_", alt)) * n_menores_0_5_cut + # (n_menores_6_11 >= 1)                  +
-      get(paste0("bnmenores_6_11_", alt)) * n_menores_6_11_cut + # (n_menores_6_11 >= 1)                  +
+      get(paste0("bnmenores_0_4_", alt)) * n_menores_0_4_cut +
+      get(paste0("bnmenores_5_14_", alt)) * n_menores_5_14_cut +
+      get(paste0("bnpersonas_15_65_", alt)) * n_personas_15_65_cut +
       get(paste0("bntrabajadores_", alt)) * n_trabajadores_cut + # (n_trabajadores >= 2 )               +
       get(paste0("bnprofesionales_", alt)) * n_profesionales_cut + # (n_trabajadores >= 2 )               +
       get(paste0("bedadpromedio_", alt)) * edad_promedio + # (n_trabajadores >= 2 )               +

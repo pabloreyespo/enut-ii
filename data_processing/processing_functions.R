@@ -40,6 +40,19 @@ acts_corregidas <- c(
   "t_tt2" # traslados adicionales
 )
 
+# Alternative care time decomposition (NOT included in acts_corregidas to avoid double-counting)
+# These variables represent care time by age group of care recipient:
+#   t_tcnr_nna = t_tcnr_0_4 + t_tcnr_5_14
+#   t_tcnr_nna + t_tcnr_15_65 + t_tcnr_66 + t_tncr_psdf = t_tcnr_ce + t_tcnr_re + t_tcnr_oac
+acts_care_alternatives <- c(
+  "t_tcnr_0_4",
+  "t_tcnr_5_14",
+  "t_tcnr_nna",   # derived: t_tcnr_0_4 + t_tcnr_5_14
+  "t_tcnr_15_65",
+  "t_tcnr_66",
+  "t_tncr_psdf"
+)
+
 t_agregados <- c(
   "t_paid_work",
   "t_domestic_work",
@@ -70,11 +83,11 @@ t_agregados_new <- c(
 identificadores <- c("id_persona", "id_hog")
 composicion_hogar <- c(
   "parentesco",
-  "n_menores_0_5",
-  "n_menores_6_11",
-  "n_menores_0_14",
-  "n_menores_12_17",
-  "n_menores",
+  "n_menores_0_4",
+  "n_menores_5_14",
+  "n_nna",
+  "n_menores_18",
+  "n_personas_15_65",
   "n_mayores",
   "n_tiempo",
   "n_trabajadores",
@@ -120,10 +133,10 @@ new_variables_prefilter <- function(data) {
   data <- data %>%
     mutate(
       menor_edad = case_when(edad < 18 ~ 1, TRUE ~ 0),
-      menor_0_5 = case_when(edad < 6 ~ 1, TRUE ~ 0),
-      menor_6_11 = case_when(edad >= 6 & edad < 12 ~ 1, TRUE ~ 0),
-      menor_0_14 = case_when(edad < 15 ~ 1, TRUE ~ 0),
-      menor_12_17 = case_when(edad >= 12 & edad < 18 ~ 1, TRUE ~ 0),
+      menor_0_4 = case_when(edad <= 4 ~ 1, TRUE ~ 0),
+      menor_5_14 = case_when(edad >= 5 & edad <= 14 ~ 1, TRUE ~ 0),
+      menor_0_14 = case_when(edad <= 14 ~ 1, TRUE ~ 0),
+      persona_15_65 = case_when(edad >= 15 & edad <= 65 ~ 1, TRUE ~ 0),
       menor25 = case_when(edad <= 25 ~ 1, TRUE ~ 0),
       mayor_edad = case_when(edad >= 18 ~ 1, TRUE ~ 0),
       tercera_edad = case_when(edad >= 60 ~ 1, TRUE ~ 0),
@@ -160,12 +173,12 @@ new_variables_prefilter <- function(data) {
   data <- data %>%
     group_by(id_hog) %>%
     mutate(
-      n_menores = sum(menor_edad, na.rm = TRUE),
-      n_menores_0_5 = sum(menor_0_5, na.rm = TRUE),
-      n_menores_6_11 = sum(menor_6_11, na.rm = TRUE),
-      n_menores_0_14 = sum(menor_0_14, na.rm = TRUE),
-      n_menores_12_17 = sum(menor_12_17, na.rm = TRUE),
-      n_menores25 = sum(menor25, na.rm = TRUE),
+      n_menores_18 = sum(menor_edad, na.rm = TRUE),
+      n_menores_0_4 = sum(menor_0_4, na.rm = TRUE),
+      n_menores_5_14 = sum(menor_5_14, na.rm = TRUE),
+      n_nna = sum(menor_0_14, na.rm = TRUE),
+      n_personas_15_65 = sum(persona_15_65, na.rm = TRUE),
+      n_menores_1825 = sum(menor25, na.rm = TRUE),
       n_mayores = sum(mayor_edad, na.rm = TRUE),
       n_tercera_edad = sum(tercera_edad, na.rm = TRUE),
       n_tiempo = sum(tiempo, na.rm = T),
@@ -261,12 +274,11 @@ na_completion <- function(data) {
     "t_tcnr_ce", # cuidados escenciales
     "t_tcnr_re", # cuidados relativos a la eseñanza
     "t_tcnr_oac", # otros cuidados
-    # "t_tcnr_0_4",
-    # "t_tcnr_5_14",
-    # "t_tcnr_nna",  #(niños y adolescentes)
-    # "t_tcnr_15_65",
-    # "t_tcnr_66",
-    # "t_tncr_psdf"
+    "t_tcnr_0_4", # cuidado a menores de 0-4 anos
+    "t_tcnr_5_14", # cuidado a menores de 5-14 anos
+    "t_tcnr_15_65", # cuidado a personas de 15-65 anos
+    "t_tcnr_66", # cuidado a personas de 66+ anos
+    "t_tncr_psdf", # cuidado a personas con discapacidad
     "t_tdnr_psc",
     "t_tdnr_lv",
     "t_tdnr_lrc",
@@ -405,7 +417,7 @@ new_variables_postfilter <- function(data) {
         T ~ "66+"
       ), # 12-24, 25-45, 46-65, 66+
       estudia = abs(abs(e4 - 1) - 1),
-      n_menores = case_when(n_menores <= 3 ~ n_menores, T ~ 4),
+      n_menores_18 = case_when(n_menores_18 <= 3 ~ n_menores_18, T ~ 4),
       n_mayores = case_when(n_mayores <= 5 ~ n_mayores, T ~ 6),
       nivel_escolaridad = case_when( # todos los niveles son completos, excepto el inicial
         nivel_escolaridad == 1 ~ "ninguna",
@@ -585,7 +597,9 @@ agregar_actividades <- function(data_post) {
       t_meals = t_cpag_comer, # committed/free
       t_sleep = t_cpag_dormir, # committed/free
       t_commute1 = t_tt1,
-      t_commute2 = t_tt2
+      t_commute2 = t_tt2,
+      # Alternative care decomposition (derived)
+      t_tcnr_nna = t_tcnr_0_4 + t_tcnr_5_14
     )
 
   data_post <- data_post %>%
@@ -605,11 +619,13 @@ agregar_actividades <- function(data_post) {
       all_of(laborales),
       bs1:bs19,
       all_of(ingresos),
-      all_of(acts_corregidas)
+      all_of(acts_corregidas),
+      all_of(acts_care_alternatives)
     ) %>%
     mutate(t_total = dplyr::select(., all_of(acts_corregidas)) %>% rowSums(na.rm = TRUE))
 
   data25[, acts_corregidas] <- round(data25[, acts_corregidas], 2)
+  data25[, acts_care_alternatives] <- round(data25[, acts_care_alternatives], 2)
   data25[, "temp"] <- rowSums(data25[, acts_corregidas])
   data25[, "t_cpag_dormir"] <- data25[, "t_cpag_dormir"] - (data25[, "temp"] - 168)
   data25[, "temp"] <- rowSums(data25[, acts_corregidas])
@@ -627,11 +643,13 @@ agregar_actividades <- function(data_post) {
       bs1:bs19,
       all_of(ingresos),
       all_of(t_agregados),
-      all_of(t_agregados_new)
+      all_of(t_agregados_new),
+      all_of(acts_care_alternatives)
     ) %>%
     mutate(t_total = dplyr::select(., all_of(t_agregados)) %>% rowSums(na.rm = TRUE))
 
   data11[, c(t_agregados, t_agregados_new)] <- round(data11[, c(t_agregados, t_agregados_new)], 2)
+  data11[, acts_care_alternatives] <- round(data11[, acts_care_alternatives], 2)
   data11[, "temp"] <- rowSums(data11[, t_agregados])
   data11[, "t_sleep"] <- data11[, "t_sleep"] - (data11[, "temp"] - 168)
   data11[, "Tc_sleep"] <- data11[, "Tc_sleep"] - (data11[, "temp"] - 168)
@@ -649,15 +667,15 @@ imputacion_gastos <- function(data) {
   library("minpack.lm")
   data_hogar <- data %>%
     dplyr::select(
-      id_hog, n_personas, n_menores_0_5, n_menores_6_11, n_menores_12_17, n_menores, n_trabajadores, n_personas,
+      id_hog, n_personas, n_menores_0_4, n_menores_5_14, n_personas_15_65, n_menores_18, n_trabajadores, n_personas,
       edad_promedio, quintil, macrozona, ingreso_hogar, income_person_week, n_profesionales
     ) %>%
     distinct(id_hog, .keep_all = T) %>%
     mutate(
       n_personas_cut = case_when(n_personas >= 7 ~ 7, T ~ n_personas),
-      n_menores_0_5_cut = case_when(n_menores_0_5 >= 3 ~ 3, T ~ n_menores_6_11),
-      n_menores_6_11_cut = case_when(n_menores_6_11 >= 2 ~ 3, T ~ n_menores_6_11),
-      n_menores_12_17_cut = case_when(n_menores_12_17 >= 2 ~ 3, T ~ n_menores_12_17),
+      n_menores_0_4_cut = case_when(n_menores_0_4 >= 3 ~ 3, T ~ n_menores_0_4),
+      n_menores_5_14_cut = case_when(n_menores_5_14 >= 3 ~ 3, T ~ n_menores_5_14),
+      n_personas_15_65_cut = case_when(n_personas_15_65 >= 3 ~ 3, T ~ n_personas_15_65),
       n_trabajadores_cut = case_when(n_trabajadores >= 3 ~ 3, T ~ n_trabajadores),
       n_profesionales_cut = case_when(n_profesionales >= 2 ~ 3, T ~ n_profesionales)
     )
@@ -669,7 +687,7 @@ imputacion_gastos <- function(data) {
     savings ~
       ingreso_hogar +
       (quintil == 2) + (quintil == 3) + (quintil == 4) + (quintil == 5) +
-      n_menores_0_5_cut + n_menores_6_11_cut + n_menores_12_17_cut + n_personas_cut +
+      n_menores_0_4_cut + n_menores_5_14_cut + n_personas_15_65_cut + n_personas_cut +
       n_trabajadores_cut + n_profesionales_cut +
       edad_promedio +
       (macrozona == "norte") + (macrozona == "centro") + (macrozona == "sur"),
@@ -764,11 +782,11 @@ imputacion_gastos <- function(data) {
   weekend_day          = "dia_fin_semana",
   # household composition
   relationship_to_head = "parentesco",
-  n_children_0_5       = "n_menores_0_5",
-  n_children_6_11      = "n_menores_6_11",
-  n_children_0_14      = "n_menores_0_14",
-  n_youth_12_17        = "n_menores_12_17",
-  n_underage           = "n_menores",
+  n_children_0_4       = "n_menores_0_4",
+  n_children_5_14      = "n_menores_5_14",
+  n_children_0_14      = "n_nna",
+  n_adults_15_65       = "n_personas_15_65",
+  n_underage           = "n_menores_18",
   n_adults             = "n_mayores",
   n_time_reporters     = "n_tiempo",
   n_workers            = "n_trabajadores",
@@ -838,6 +856,13 @@ rename_to_english_raw <- function(data) {
     t_care_essential         = "t_tcnr_ce",
     t_care_education_related = "t_tcnr_re",
     t_care_other             = "t_tcnr_oac",
+    # alternative care decomposition
+    t_care_0_4               = "t_tcnr_0_4",
+    t_care_5_14              = "t_tcnr_5_14",
+    t_care_children_teens    = "t_tcnr_nna",
+    t_care_15_65             = "t_tcnr_15_65",
+    t_care_66_plus           = "t_tcnr_66",
+    t_care_disability        = "t_tncr_psdf",
     t_domestic_meals         = "t_tdnr_psc",
     t_domestic_cleaning      = "t_tdnr_lv",
     t_domestic_laundry       = "t_tdnr_lrc",

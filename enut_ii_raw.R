@@ -21,11 +21,11 @@
 #'   \item{dia_fin_semana}{Weekend day of diary (6 = Saturday, 7 = Sunday)}
 #'
 #'   \item{parentesco}{Relationship to household head (from pco)}
-#'   \item{n_menores_0_5}{Number of household members under age 6 (ages 0-5)}
-#'   \item{n_menores_6_11}{Number of household members aged 6-11}
-#'   \item{n_menores_0_14}{Number of household members under age 15 (ages 0-14)}
-#'   \item{n_menores_12_17}{Number of household members aged 12-17}
-#'   \item{n_menores}{Number of household members under 18, capped at 4}
+#'   \item{n_menores_0_4}{Number of household members aged 0-4}
+#'   \item{n_menores_5_14}{Number of household members aged 5-14}
+#'   \item{n_nna}{Number of household members aged 0-14}
+#'   \item{n_menores_18}{Number of household members under 18, capped at 4}
+#'   \item{n_personas_15_65}{Number of household members aged 15-65}
 #'   \item{n_mayores}{Number of adult household members (18+), capped at 6}
 #'   \item{n_tiempo}{Number of household members who reported time use}
 #'   \item{n_trabajadores}{Number of employed workers in household}
@@ -133,6 +133,19 @@
 #'     al establecimiento educacional, apoyo en tareas y lectura, horas semanales}
 #'   \item{t_tcnr_oac}{Trabajo de cuidado no remunerado - otros cuidados: acompanamiento medico, traslado
 #'     al trabajo u otras actividades, otros cuidados no clasificados, horas semanales}
+#'
+#'   \strong{Alternative care decomposition} (these variables are an alternative breakdown of the same
+#'   total care time as \code{t_tcnr_ce + t_tcnr_re + t_tcnr_oac}; do NOT sum both sets together):
+#'   \item{t_tcnr_0_4}{Trabajo de cuidado no remunerado - cuidado de menores de 0 a 4 anos, horas semanales}
+#'   \item{t_tcnr_5_14}{Trabajo de cuidado no remunerado - cuidado de menores de 5 a 14 anos, horas semanales}
+#'   \item{t_tcnr_nna}{Trabajo de cuidado no remunerado - cuidado de ninas, ninos y adolescentes (0-14 anos);
+#'     derived as \code{t_tcnr_0_4 + t_tcnr_5_14}, horas semanales}
+#'   \item{t_tcnr_15_65}{Trabajo de cuidado no remunerado - cuidado de personas de 15 a 65 anos, horas semanales}
+#'   \item{t_tcnr_66}{Trabajo de cuidado no remunerado - cuidado de personas de 66 anos y mas, horas semanales}
+#'   \item{t_tncr_psdf}{Trabajo de cuidado no remunerado - cuidado de personas con discapacidad, horas semanales}
+#'
+#'   Note: \code{t_tcnr_nna + t_tcnr_15_65 + t_tcnr_66 + t_tncr_psdf = t_tcnr_ce + t_tcnr_re + t_tcnr_oac}
+#'
 #'   \item{t_tdnr_psc}{Trabajo domestico no remunerado - preparacion y servicio de comida, horas semanales}
 #'   \item{t_tdnr_lv}{Trabajo domestico no remunerado - limpieza de vivienda, horas semanales}
 #'   \item{t_tdnr_lrc}{Trabajo domestico no remunerado - limpieza y reparacion de ropa, horas semanales}
