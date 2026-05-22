@@ -47,7 +47,18 @@ acts_corregidas <- c(
 acts_care_alternatives <- c(
   "t_tcnr_0_4",
   "t_tcnr_5_14",
-  "t_tcnr_nna",   # derived: t_tcnr_0_4 + t_tcnr_5_14
+  "t_tcnr_nna",   # cuidado a ninas, ninos y adolescentes (0-14)
+  "t_tcnr_15_65",
+  "t_tcnr_66",
+  "t_tcnr_psdf"
+)
+
+# Base care alternative variables (all come from raw data)
+# These need _ds/_fds processing through the pipeline
+acts_care_alt_base <- c(
+  "t_tcnr_0_4",
+  "t_tcnr_5_14",
+  "t_tcnr_nna",
   "t_tcnr_15_65",
   "t_tcnr_66",
   "t_tcnr_psdf"
@@ -277,6 +288,7 @@ na_completion <- function(data) {
     "t_tcnr_oac", # otros cuidados
     "t_tcnr_0_4", # cuidado a menores de 0-4 anos
     "t_tcnr_5_14", # cuidado a menores de 5-14 anos
+    "t_tcnr_nna", # cuidado a ninas, ninos y adolescentes (0-14)
     "t_tcnr_15_65", # cuidado a personas de 15-65 anos
     "t_tcnr_66", # cuidado a personas de 66+ anos
     "t_tcnr_psdf", # cuidado a personas con discapacidad
@@ -460,6 +472,8 @@ data_to168hours <- function(data) {
     filter(t_confiable <= 168) %>%
     mutate(mult_no_confiable = (168 - t_confiable) / (t_total - t_confiable)) %>%
     mutate_at(act_no_confiable, ~ . * mult_no_confiable) %>%
+    # Scale care alternatives by the same proportion as no-confiable activities
+    mutate_at(acts_care_alt_base, ~ . * mult_no_confiable) %>%
     mutate(
       t_total = dplyr::select(., all_of(c(act_confiable, act_no_confiable))) %>%
         rowSums(na.rm = TRUE)
@@ -478,6 +492,16 @@ impute_weekend <- function(data, twin_matrix) {
   dias_semana <- paste0(acts_corregidas, "_ds")
 
   semana_completa <- acts_corregidas
+
+  # Care alternative variables (processed in parallel, same proportions)
+  care_acts <- list(
+    "6" = paste0(acts_care_alt_base, "_sab"),
+    "7" = paste0(acts_care_alt_base, "_dom")
+  )
+  care_fds <- paste0(acts_care_alt_base, "_fds")
+  care_ds <- paste0(acts_care_alt_base, "_ds")
+  care_semana_completa <- acts_care_alt_base
+
   for (i in 6:7) {
     mask <- data$dia_fin_semana == i
     finde <- unlist(acts[as.character(i)])
@@ -486,10 +510,18 @@ impute_weekend <- function(data, twin_matrix) {
     suma <- rowSums(twin_matrix[!mask, mask])
     data[!mask, finde] <- as.matrix(twin_matrix[!mask, mask]) %*% as.matrix(data[mask, finsemana])
     data[!mask, finde] <- sweep(data[!mask, finde], 1, suma, "/")
+
+    # Twin matrix imputation for care alternatives
+    care_finde <- unlist(care_acts[as.character(i)])
+    data[mask, care_finde] <- data[mask, care_fds]
+    data[!mask, care_finde] <- as.matrix(twin_matrix[!mask, mask]) %*% as.matrix(data[mask, care_fds])
+    data[!mask, care_finde] <- sweep(data[!mask, care_finde], 1, suma, "/")
   }
 
   sabados <- unlist(acts["6"])
   domingos <- unlist(acts["7"])
+  care_sab <- unlist(care_acts["6"])
+  care_dom <- unlist(care_acts["7"])
   data_post <- data %>%
     # mutate_at(sabados , ~ifelse(. <= 1/12,0 ,.)) %>% # todo tiempo al que se le dedique menos de 5 minutos
     # mutate_at(domingos , ~ifelse(. <= 1/12,0 ,.)) %>%  # todo tiempo al que se le dedique menos de 5 minutos
@@ -499,19 +531,29 @@ impute_weekend <- function(data, twin_matrix) {
     ) %>%
     mutate_at(sabados, ~ . * 24 / sum_sabados) %>%
     mutate_at(domingos, ~ . * 24 / sum_domingos) %>%
+    # Scale care alternatives using the same proportions as acts_corregidas
+    mutate_at(care_sab, ~ . * 24 / sum_sabados) %>%
+    mutate_at(care_dom, ~ . * 24 / sum_domingos) %>%
     mutate(
       sum_sabados = dplyr::select(., all_of(sabados)) %>% rowSums(na.rm = TRUE),
       sum_domingos = dplyr::select(., all_of(domingos)) %>% rowSums(na.rm = TRUE)
     ) %>%
-    mutate_at(dias_semana, ~ case_when((dias_trabajo_semana < 5) & (dias_trabajo_semana > 0) ~ . * dias_trabajo_semana, T ~ . * 5))
+    mutate_at(dias_semana, ~ case_when((dias_trabajo_semana < 5) & (dias_trabajo_semana > 0) ~ . * dias_trabajo_semana, T ~ . * 5)) %>%
+    mutate_at(care_ds, ~ case_when((dias_trabajo_semana < 5) & (dias_trabajo_semana > 0) ~ . * dias_trabajo_semana, T ~ . * 5))
 
   temp <- data_post[, "t_to_ds"]
   data_post[, "t_to_ds"] <- 0
-  data_post[, dias_semana] <- sweep(data_post[, dias_semana], 1, rowSums(data_post[, dias_semana]), "/")
+  non_t_to_sums <- rowSums(data_post[, dias_semana])
+  data_post[, dias_semana] <- sweep(data_post[, dias_semana], 1, non_t_to_sums, "/")
   data_post[, dias_semana] <- sweep(data_post[, dias_semana], 1, as.numeric(unlist(24 * 5 - temp)), "*")
   data_post[, "t_to_ds"] <- temp
 
+  # Redistribute care alternative weekday time using the same proportional factor
+  weekday_factor <- as.numeric(unlist(24 * 5 - temp)) / non_t_to_sums
+  data_post[, care_ds] <- sweep(data_post[, care_ds], 1, weekday_factor, "*")
+
   data_post[, semana_completa] <- data_post[, dias_semana] + data_post[, sabados] + data_post[, domingos]
+  data_post[, care_semana_completa] <- data_post[, care_ds] + data_post[, care_sab] + data_post[, care_dom]
   data_post[, "t_total"] <- rowSums(data_post[, semana_completa])
 
   return(data_post)
@@ -598,9 +640,7 @@ agregar_actividades <- function(data_post) {
       t_meals = t_cpag_comer, # committed/free
       t_sleep = t_cpag_dormir, # committed/free
       t_commute1 = t_tt1,
-      t_commute2 = t_tt2,
-      # Alternative care decomposition (derived)
-      t_tcnr_nna = t_tcnr_0_4 + t_tcnr_5_14
+      t_commute2 = t_tt2
     )
 
   data_post <- data_post %>%
