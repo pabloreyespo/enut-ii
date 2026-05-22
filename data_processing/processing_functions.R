@@ -121,7 +121,7 @@ sociodemograficas <- c(
 
 laborales <- c("teletrabaja", "jornada_laboral", "cae", "ocup_form", "cise", "ciuo_agrupada")
 proveedores_externos <- c("servicio_domestico", "ayuda_cercanos", "fuentes_externas")
-ingresos <- c("ing_ocuppal", "ing_trab", "ing_jub_aps", "ing_g", "ing_t_hogar", "ing_t_pc", "ing_gpp", "ing_personal", "ingreso_hogar", "income_person_week")
+ingresos <- c("ing_ocuppal", "ing_trab", "ing_jub_aps", "ing_g", "ing_t_hogar", "ing_t_pc", "ing_gpp", "ing_personal", "ingreso_hogar", "income_person_week", "I")
 tipo_muestra <- c("es_trabajador", "es_familia")
 
 new_variables_prefilter <- function(data) {
@@ -235,7 +235,8 @@ new_variables_prefilter <- function(data) {
       T ~ 5
     )) %>%
     dplyr::select(-c(percentil, fe_ch)) %>%
-    mutate_at(c("prop_ing_hogar", "ingreso_hogar", "ing_gpp", "income_person_week", "ingreso_personal"), ~ replace_na(., 0))
+    mutate_at(c("prop_ing_hogar", "ingreso_hogar", "ing_gpp", "income_person_week", "ingreso_personal"), ~ replace_na(., 0)) %>%
+    mutate(I = ing_jub_aps + ing_g)
 
   return(data)
 }
