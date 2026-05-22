@@ -186,7 +186,7 @@ apollo_control <- list(
   modelDescr = "Fractional MNL model on time use data",
   indivID = "id_hogar",
   outputDirectory = "output",
-  nCores = 44
+  nCores = 22
 )
 
 database <- gastos
@@ -206,7 +206,7 @@ apollo_beta <- c(
 )
 
 apollo_fixed <- c(
-  "asc_vestimenta", "bnpersonas_vestimenta", "bnmenores_0_4_vestimenta", "bnmenores_5_14_vestimenta", "bntrabajadores_vestimenta",
+  "asc_vestimenta", "bnpersonas_vestimenta", "bnmenores_0_4_vestimenta", "bnmenores_5_14_vestimenta", "bnpersonas_15_65_vestimenta", "bntrabajadores_vestimenta",
   "bnprofesionales_vestimenta", "bedadpromedio_vestimenta", "bq2_vestimenta", "bq3_vestimenta", "bq4_vestimenta", "bq5_vestimenta",
   "bnorte_vestimenta", "bcentro_vestimenta", "bsur_vestimenta"
 )
@@ -254,4 +254,3 @@ apollo_probabilities <- function(apollo_beta, apollo_inputs, functionality = "es
 model <- apollo_estimate(apollo_beta, apollo_fixed, apollo_probabilities, apollo_inputs)
 apollo_modelOutput(model)
 apollo_saveOutput(model)
-apollo_loadModel("output/FMNL")

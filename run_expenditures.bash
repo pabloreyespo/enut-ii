@@ -1,10 +1,10 @@
 #!/bin/bash
 #---------------Script SBATCH - NLHPC ----------------
-#SBATCH -J expenditures
+#SBATCH -J enut-ii-expenditures
 #SBATCH -p general
 #SBATCH -n 1
 #SBATCH --ntasks-per-node=1
-#SBATCH -c 44
+#SBATCH -c 22
 #SBATCH --mem-per-cpu=3000
 #SBATCH --mail-user=pareyes2018@udec.cl
 #SBATCH --mail-type=ALL

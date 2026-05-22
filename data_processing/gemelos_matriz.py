@@ -51,10 +51,9 @@ if __name__ == "__main__":
                    "horas_trabajo_contratadas",
                     "n_menores_0_4",
                     "n_menores_5_14",
-                    "n_nna",
-                    "n_menores_18",
                     "n_personas_15_65",
-                    "n_personas"]
+                    "n_tercera_edad",
+                    ]
 
     data = pl.read_csv("data/raw/ENUT_PRE_WEEKEND_IMPUTATION.csv",
                        infer_schema_length=100000,
@@ -80,16 +79,17 @@ if __name__ == "__main__":
     for i, vec in r:
         mu[i] = vec
 
-    np.save("data/raw/matriz_gemelos2.npy", mu.round(2))
-    np.save("data/raw/matriz_gemelos4.npy", mu.round(4))
-    np.save("data/raw/matriz_gemelos5.npy", mu.round(5))
+    # np.save("data/raw/matriz_gemelos2.npy", mu.round(2))
+    # np.save("data/raw/matriz_gemelos4.npy", mu.round(4))
+    # np.save("data/raw/matriz_gemelos5.npy", mu.round(5))
 
     df = pd.DataFrame(mu)
     df.to_csv(
-        "data/raw/matriz_gemelos5.csv.gzip",
+        "data/raw/matriz_gemelos.csv.gzip",
         header = False,
         index = False,
-        compression = "gzip"
+        compression = "gzip",
+        float_format='%.4f'
     )
 
     # for i in tqdm(range(n)):
