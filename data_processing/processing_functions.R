@@ -523,6 +523,21 @@ data_to168hours <- function(data) {
 }
 
 impute_weekend <- function(data, twin_matrix) {
+  # Ensure twin_matrix is a proper matrix (not a tibble/data.frame) for
+  # matrix-style subsetting with logical vectors on both rows and columns.
+  if (!is.matrix(twin_matrix)) {
+    twin_matrix <- as.matrix(twin_matrix)
+  }
+
+  # Ensure dimensions match: twin_matrix must be nrow(data) x nrow(data)
+  nr <- nrow(data)
+  if (nrow(twin_matrix) != nr || ncol(twin_matrix) != nr) {
+    stop(paste0(
+      "twin_matrix dimensions (", nrow(twin_matrix), " x ", ncol(twin_matrix),
+      ") do not match data rows (", nr, ")"
+    ))
+  }
+
   acts <- list(
     "6" = paste0(acts_corregidas, "_sab"),
     "7" = paste0(acts_corregidas, "_dom")

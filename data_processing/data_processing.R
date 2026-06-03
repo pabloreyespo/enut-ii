@@ -67,8 +67,7 @@ write_csv(data_outliers %>% arrange(id_persona), "data/raw/ENUT_PRE_WEEKEND_IMPU
 data <- haven::read_dta("data/raw/ENUT_PRE_WEEKEND_IMPUTATION.dta") %>% arrange(id_persona)
 # ------------------------------------------------------------------------------
 
-twin_matrix <- read_csv("data/raw/matriz_gemelos.csv.gzip", col_names = F)
-# twin_matrix <- t(as.matrix(twin_matrix))
+twin_matrix <- as.matrix(read_csv("data/raw/matriz_gemelos.csv.gzip", col_names = F))
 data_post <- impute_weekend(data, twin_matrix) # TODO arreglar esta función para la nueva implementación de datos
 rm(twin_matrix)
 data_post <- diagnostico_trabajo(data_post, F, T)
