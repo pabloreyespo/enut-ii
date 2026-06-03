@@ -57,6 +57,8 @@ data_outliers <- data_outliers %>% dplyr::select(
   all_of(paste0(acts_corregidas, "_fds")),
   all_of(paste0(acts_care_alt_base, "_ds")),
   all_of(paste0(acts_care_alt_base, "_fds")),
+  all_of(paste0(tact_component_vars, "_ds")),
+  all_of(paste0(tact_component_vars, "_fds")),
   bs1:bs19)
 
 # ------------------------------------------------------------------------------

@@ -46,8 +46,14 @@ all_activities   <- c(
   "t_mcm_audio",
   "t_mcm_video",
   "t_mcm_computador",
-  "t_tt1",
-  "t_tt2"
+  "t_commute_to",
+  "t_commute_ed",
+  "t_commute_cpaf_cp",
+  "t_commute_tdnr_admnhog",
+  "t_commute_tdnr_comphog",
+  "t_commute_tcnr_re",
+  "t_commute_tcnr_ce",
+  "t_commute_tcnr_oac"
 )
 all_expenditures <- c(
   "alimentos",
@@ -162,7 +168,7 @@ get_data_tc <- function(especificas = c(), disputed = "t_sleep") {
     )
 
   leisure_activities <- c("t_leisure", disputed)
-  acts  <-c("t_personal_care", "t_sleep","t_meals", "t_commute1", "t_commute2", "t_care_work", "t_domestic_work", "t_unpaid_voluntary", "t_education")
+  acts  <-c("t_personal_care", "t_sleep","t_meals", "t_tto", "t_ted", "t_tcpaf_cp", "t_ttdnr_admnhog", "t_ttdnr_comphog", "t_ttcnr_re", "t_ttcnr_oac_health", "t_ttcnr_oac_work", "t_care_work", "t_domestic_work", "t_unpaid_voluntary", "t_education")
   non_leisure_activities <- acts[!(acts %in% leisure_activities)]
   model_data[, "ta"] <- 168
   model_data[, "Tw_1"]        <- model_data[, "t_paid_work"]
@@ -208,7 +214,7 @@ get_data_2tc <- function(especificas = c(), disputed = c("t_sleep", "t_meals")) 
     )
 
   leisure_activities <- c("t_leisure", disputed)
-  acts  <-c("t_personal_care", "t_sleep","t_meals", "t_commute1", "t_commute2", "t_care_work", "t_domestic_work", "t_unpaid_voluntary", "t_education")
+  acts  <-c("t_personal_care", "t_sleep","t_meals", "t_tto", "t_ted", "t_tcpaf_cp", "t_ttdnr_admnhog", "t_ttdnr_comphog", "t_ttcnr_re", "t_ttcnr_oac_health", "t_ttcnr_oac_work", "t_care_work", "t_domestic_work", "t_unpaid_voluntary", "t_education")
   non_leisure_activities <- acts[!(acts %in% leisure_activities)]
   model_data[, "ta"] <- 168
 

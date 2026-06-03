@@ -1,0 +1,9 @@
+﻿macroactividad que contiene activiad asociada;actividada asociada;traslado ida;modo transporte ida;traslado vuelta;modo transporte vuelta;tiempo traslado total = (traslado ida + traslado vuelta);porcenatje actividad = actividad asociada / macroactividad
+t_to;to5_t;to3_t;to4_m;to7_t;to8_m;t_tto;pctje_tto
+t_ed;ed4_t;ed2_t;ed3_m;ed5_t;ed6_m;t_ted;pctje_ted
+t_cpaf_cp;cp9_t;cp7_t;cp8_m;cp10_t;cp11_m;t_tcpaf_cp;pctje_tcpaf_cp
+t_tdnr_admnhog;td16_t;td14_t;td15_m;td17_t;td18_m;t_ttdnr_admnhog;pctje_ttdnr_admnhog
+t_tdnr_comphog;td22_t;td20_t;td21_m;td23_t;td24_m;t_ttdnr_comphog;pctje_ttdnr_comphog
+t_tcnr_re;tc14_t;tc12_t;tc13_m;tc15_t;tc16_m;t_ttcnr_re;pctje_ttcnr_re
+t_tcnr_ce;tc23_t;tc21_t;tc22_m;tc25_t;tc26_m;t_ttcnr_ce;pctje_ttcnr_ce
+t_tcnr_oac;tc33_t;tc31_t;tc32_m;tc34_t;tc35_m;t_ttcnr_oac;pctje_ttcnr_oac

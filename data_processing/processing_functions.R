@@ -36,8 +36,14 @@ acts_corregidas <- c(
   "t_mcm_video",
   "t_mcm_audio",
   "t_mcm_computador",
-  "t_tt1", # traslados enut 2015
-  "t_tt2" # traslados adicionales
+  "t_tto", # traslados asociados a trabajo remunerado
+  "t_ted", # traslados asociados a educacion
+  "t_tcpaf_cp", # traslados asociados a cuidados personales / salud
+  "t_ttdnr_admnhog", # traslados asociados a administracion del hogar
+  "t_ttdnr_comphog", # traslados asociados a compras del hogar
+  "t_ttcnr_re", # traslados asociados a cuidados relativos a la ensenanza
+  "t_ttcnr_oac_health", # traslados asociados a cuidados esenciales (salud)
+  "t_ttcnr_oac_work" # traslados asociados a otros cuidados (trabajo)
 )
 
 # Alternative care time decomposition (NOT included in acts_corregidas to avoid double-counting)
@@ -64,6 +70,21 @@ acts_care_alt_base <- c(
   "t_tcnr_psdf"
 )
 
+# Component variables used in tact numerators
+# These need _sab/_dom imputation so tact_fds uses imputed weekend values
+# tact_component_vars_nonwork need weekday redistribution (part of redistributed activities)
+# tact_component_vars_work does NOT need weekday redistribution (part of t_to which is excluded)
+tact_component_vars <- c(
+  "to5_t",    # work commute numerator (part of t_to, NOT redistributed)
+  "ed4_t",    # education commute numerator
+  "cp9_t",    # personal care / health commute numerator
+  "td16_t",   # domestic admin commute numerator
+  "td22_t",   # domestic shopping commute numerator
+  "tc16_t",   # care education numerator
+  "tc22_t"    # care essential / health numerator
+)
+tact_component_vars_nonwork <- tact_component_vars[tact_component_vars != "to5_t"]
+
 t_agregados <- c(
   "t_paid_work",
   "t_domestic_work",
@@ -73,9 +94,7 @@ t_agregados <- c(
   "t_leisure",
   "t_personal_care",
   "t_meals",
-  "t_sleep",
-  "t_commute1",
-  "t_commute2"
+  "t_sleep"
 )
 
 t_agregados_new <- c(
@@ -89,6 +108,18 @@ t_agregados_new <- c(
   "Tc_meals",
   "Tc_sleep",
   "Tc_other"
+)
+
+tact_vars <- c(
+  "tact_tto_ds", "tact_tto_fds",
+  "tact_ted_ds", "tact_ted_fds",
+  "tact_tcpaf_cp_ds", "tact_tcpaf_cp_fds",
+  "tact_ttdnr_admnhog_ds", "tact_ttdnr_admnhog_fds",
+  "tact_ttdnr_comphog_ds", "tact_ttdnr_comphog_fds",
+  "tact_ttcnr_re_ds", "tact_ttcnr_re_fds",
+  "tact_ttcnr_oac_health_ds", "tact_ttcnr_oac_health_fds",
+  "tact_ttcnr_oac_work_ds", "tact_ttcnr_oac_work_fds",
+  "tact_factor_sab", "tact_factor_dom", "tact_factor_ds"
 )
 
 identificadores <- c("id_persona", "id_hog")
@@ -253,28 +284,21 @@ new_variables_prefilter <- function(data) {
 }
 
 na_completion <- function(data) {
-  act_traslados_2015 <- c(
-    "t_tto", # traslado al trabajo en la ocupación
-    "t_ted", # traslado al establecimiento educacional
-    "cp7_t", # ida y vuelta a establecimiento de salud
-    "cp10_t"
+  # Commute components grouped by macro-activity (from clasificacion_traslado.csv)
+  act_traslados <- list(
+    to          = c("to3_t", "to7_t"),            # asociados a trabajo remunerado (t_to)
+    ed          = c("ed2_t", "ed5_t"),            # asociados a educacion (t_ed)
+    cpaf_cp     = c("cp7_t", "cp10_t"),           # asociados a cuidados personales / salud (t_cpaf_cp)
+    tdnr_admnhog = c("td14_t", "td17_t"),         # asociados a administracion del hogar (t_tdnr_admnhog)
+    tdnr_comphog = c("td20_t", "td23_t"),         # asociados a compras del hogar (t_tdnr_comphog)
+    tcnr_re     = c("tc12_t", "tc15_t"),          # asociados a cuidados relativos a la ensenanza (t_tcnr_re)
+    tcnr_oac_health  = c("tc21_t", "tc25_t"),    # asociados a cuidados esenciales (t_tcnr_ce)
+    tcnr_oac_work    = c("tc31_t", "tc34_t")           # asociados a otros cuidados (t_tcnr_oac)
   )
-  act_traslados_2023 <- c(
-    "td14_t", # ida y vuelta a hacer tramites
-    "td17_t",
-    "td20_t", # ida y vuelta a hacer compras
-    "td23_t",
-    "tc12_t", # llevar y buscar al establecimiento
-    "tc15_t",
-    "tc21_t", # llevarle al establecimiento de salud
-    "tc25_t",
-    "tc31_t", # llevarle al lugar de trabajo
-    "tc34_t"
-  )
-  act_traslados_2015_ds <- paste0(act_traslados_2015, "_ds")
-  act_traslados_2015_fds <- paste0(act_traslados_2015, "_fds")
-  act_traslados_2023_ds <- paste0(act_traslados_2023, "_ds")
-  act_traslados_2023_fds <- paste0(act_traslados_2023, "_fds")
+  # Backward-compat flat vectors (kept for acts_ds/acts_fds processing)
+  act_traslados_all <- unlist(act_traslados)
+  act_traslados_all_ds <- paste0(act_traslados_all, "_ds")
+  act_traslados_all_fds <- paste0(act_traslados_all, "_fds")
   vars_todos <- c("bs1")
 
   acts <- c(
@@ -312,8 +336,8 @@ na_completion <- function(data) {
     "vs10_t"
   )
 
-  acts_ds <- paste0(c(acts, act_traslados_2015, act_traslados_2023), "_ds")
-  acts_fds <- paste0(c(acts, act_traslados_2015, act_traslados_2023), "_fds")
+  acts_ds <- paste0(c(acts, act_traslados_all), "_ds")
+  acts_fds <- paste0(c(acts, act_traslados_all), "_fds")
 
   data <- data %>%
     # TODO reemplazar los 96 con 0
@@ -354,12 +378,28 @@ na_completion <- function(data) {
       t_tdnr_comphog_fds = t_tdnr_comphog_fds - td20_t_fds - td23_t_fds,
       t_tcnr_re_ds = t_tcnr_re_ds - tc12_t_ds - tc15_t_ds,
       t_tcnr_re_fds = t_tcnr_re_fds - tc12_t_fds - tc15_t_fds,
-      t_tcnr_oac_ds = t_tcnr_oac_ds - tc21_t_ds - tc25_t_ds - tc31_t_ds - tc34_t_ds,
-      t_tcnr_oac_fds = t_tcnr_oac_fds - tc21_t_fds - tc25_t_fds - tc31_t_fds - tc34_t_fds,
-      t_tt1_ds = dplyr::select(., all_of(act_traslados_2015_ds)) %>% rowSums(na.rm = T),
-      t_tt1_fds = dplyr::select(., all_of(act_traslados_2015_fds)) %>% rowSums(na.rm = T),
-      t_tt2_ds = dplyr::select(., all_of(act_traslados_2023_ds)) %>% rowSums(na.rm = T),
-      t_tt2_fds = dplyr::select(., all_of(act_traslados_2023_fds)) %>% rowSums(na.rm = T),
+      t_tcnr_ce_ds = t_tcnr_ce_ds, # 21 y 25 quedan afuera
+      t_tcnr_ce_fds = t_tcnr_ce_fds ,
+      t_tcnr_oac_ds = t_tcnr_oac_ds - tc21_t_ds - tc25_t_ds,
+      t_tcnr_oac_fds = t_tcnr_oac_fds - tc21_t_fds - tc25_t_fds,
+
+      t_tto_ds = dplyr::select(., all_of(paste0(act_traslados$to, "_ds"))) %>% rowSums(na.rm = T),
+      t_tto_fds = dplyr::select(., all_of(paste0(act_traslados$to, "_fds"))) %>% rowSums(na.rm = T),
+      t_ted_ds = dplyr::select(., all_of(paste0(act_traslados$ed, "_ds"))) %>% rowSums(na.rm = T),
+      t_ted_fds = dplyr::select(., all_of(paste0(act_traslados$ed, "_fds"))) %>% rowSums(na.rm = T),
+      t_tcpaf_cp_ds = dplyr::select(., all_of(paste0(act_traslados$cpaf_cp, "_ds"))) %>% rowSums(na.rm = T),
+      t_tcpaf_cp_fds = dplyr::select(., all_of(paste0(act_traslados$cpaf_cp, "_fds"))) %>% rowSums(na.rm = T),
+      t_ttdnr_admnhog_ds = dplyr::select(., all_of(paste0(act_traslados$tdnr_admnhog, "_ds"))) %>% rowSums(na.rm = T),
+      t_ttdnr_admnhog_fds = dplyr::select(., all_of(paste0(act_traslados$tdnr_admnhog, "_fds"))) %>% rowSums(na.rm = T),
+      t_ttdnr_comphog_ds = dplyr::select(., all_of(paste0(act_traslados$tdnr_comphog, "_ds"))) %>% rowSums(na.rm = T),
+      t_ttdnr_comphog_fds = dplyr::select(., all_of(paste0(act_traslados$tdnr_comphog, "_fds"))) %>% rowSums(na.rm = T),
+      t_ttcnr_re_ds = dplyr::select(., all_of(paste0(act_traslados$tcnr_re, "_ds"))) %>% rowSums(na.rm = T),
+      t_ttcnr_re_fds = dplyr::select(., all_of(paste0(act_traslados$tcnr_re, "_fds"))) %>% rowSums(na.rm = T),
+      t_ttcnr_oac_health_ds = dplyr::select(., all_of(paste0(act_traslados$tcnr_oac_health, "_ds"))) %>% rowSums(na.rm = T),
+      t_ttcnr_oac_health_fds = dplyr::select(., all_of(paste0(act_traslados$tcnr_oac_health, "_fds"))) %>% rowSums(na.rm = T),
+      t_ttcnr_oac_work_ds = dplyr::select(., all_of(paste0(act_traslados$tcnr_oac_work, "_ds"))) %>% rowSums(na.rm = T),
+      t_ttcnr_oac_work_fds = dplyr::select(., all_of(paste0(act_traslados$tcnr_oac_work, "_fds"))) %>% rowSums(na.rm = T),
+      
       t_mcm_leer_ds = dplyr::select(., all_of(c("vs7_t_ds"))) %>% rowSums(na.rm = T),
       t_mcm_video_ds = dplyr::select(., all_of(c("vs8_t_ds"))) %>% rowSums(na.rm = T),
       t_mcm_audio_ds = dplyr::select(., all_of(c("vs9_t_ds"))) %>% rowSums(na.rm = T),
@@ -459,7 +499,7 @@ new_variables_postfilter <- function(data) {
 }
 
 data_to168hours <- function(data) {
-  act_confiable <- c("t_to", "t_cpag_dormir")
+  act_confiable <- c("t_to", "t_cpag_dormir", "t_tto", "t_ted", "t_tcpaf_cp", "t_ttdnr_admnhog", "t_ttdnr_comphog", "t_ttcnr_re", "t_ttcnr_oac_health", "t_ttcnr_oac_work")
   act_no_confiable <- acts_corregidas[!acts_corregidas %in% act_confiable]
 
   data <- data %>%
@@ -502,6 +542,15 @@ impute_weekend <- function(data, twin_matrix) {
   care_ds <- paste0(acts_care_alt_base, "_ds")
   care_semana_completa <- acts_care_alt_base
 
+  # Tact component variables (processed in parallel, same proportions)
+  tact_acts <- list(
+    "6" = paste0(tact_component_vars, "_sab"),
+    "7" = paste0(tact_component_vars, "_dom")
+  )
+  tact_fds <- paste0(tact_component_vars, "_fds")
+  tact_ds <- paste0(tact_component_vars, "_ds")
+  tact_semana_completa <- tact_component_vars
+
   for (i in 6:7) {
     mask <- data$dia_fin_semana == i
     finde <- unlist(acts[as.character(i)])
@@ -516,12 +565,20 @@ impute_weekend <- function(data, twin_matrix) {
     data[mask, care_finde] <- data[mask, care_fds]
     data[!mask, care_finde] <- as.matrix(twin_matrix[!mask, mask]) %*% as.matrix(data[mask, care_fds])
     data[!mask, care_finde] <- sweep(data[!mask, care_finde], 1, suma, "/")
+
+    # Twin matrix imputation for tact component variables
+    tact_finde <- unlist(tact_acts[as.character(i)])
+    data[mask, tact_finde] <- data[mask, tact_fds]
+    data[!mask, tact_finde] <- as.matrix(twin_matrix[!mask, mask]) %*% as.matrix(data[mask, tact_fds])
+    data[!mask, tact_finde] <- sweep(data[!mask, tact_finde], 1, suma, "/")
   }
 
   sabados <- unlist(acts["6"])
   domingos <- unlist(acts["7"])
   care_sab <- unlist(care_acts["6"])
   care_dom <- unlist(care_acts["7"])
+  tact_sab <- unlist(tact_acts["6"])
+  tact_dom <- unlist(tact_acts["7"])
   data_post <- data %>%
     # mutate_at(sabados , ~ifelse(. <= 1/12,0 ,.)) %>% # todo tiempo al que se le dedique menos de 5 minutos
     # mutate_at(domingos , ~ifelse(. <= 1/12,0 ,.)) %>%  # todo tiempo al que se le dedique menos de 5 minutos
@@ -534,12 +591,16 @@ impute_weekend <- function(data, twin_matrix) {
     # Scale care alternatives using the same proportions as acts_corregidas
     mutate_at(care_sab, ~ . * 24 / sum_sabados) %>%
     mutate_at(care_dom, ~ . * 24 / sum_domingos) %>%
+    # Scale tact components using the same proportions as acts_corregidas
+    mutate_at(tact_sab, ~ . * 24 / sum_sabados) %>%
+    mutate_at(tact_dom, ~ . * 24 / sum_domingos) %>%
     mutate(
       sum_sabados = dplyr::select(., all_of(sabados)) %>% rowSums(na.rm = TRUE),
       sum_domingos = dplyr::select(., all_of(domingos)) %>% rowSums(na.rm = TRUE)
     ) %>%
     mutate_at(dias_semana, ~ case_when((dias_trabajo_semana < 5) & (dias_trabajo_semana > 0) ~ . * dias_trabajo_semana, T ~ . * 5)) %>%
-    mutate_at(care_ds, ~ case_when((dias_trabajo_semana < 5) & (dias_trabajo_semana > 0) ~ . * dias_trabajo_semana, T ~ . * 5))
+    mutate_at(care_ds, ~ case_when((dias_trabajo_semana < 5) & (dias_trabajo_semana > 0) ~ . * dias_trabajo_semana, T ~ . * 5)) %>%
+    mutate_at(tact_ds, ~ case_when((dias_trabajo_semana < 5) & (dias_trabajo_semana > 0) ~ . * dias_trabajo_semana, T ~ . * 5))
 
   temp <- data_post[, "t_to_ds"]
   data_post[, "t_to_ds"] <- 0
@@ -552,9 +613,19 @@ impute_weekend <- function(data, twin_matrix) {
   weekday_factor <- as.numeric(unlist(24 * 5 - temp)) / non_t_to_sums
   data_post[, care_ds] <- sweep(data_post[, care_ds], 1, weekday_factor, "*")
 
+  # Redistribute tact non-work component weekday time (to5_t is part of t_to, NOT redistributed)
+  tact_ds_nonwork <- paste0(tact_component_vars_nonwork, "_ds")
+  data_post[, tact_ds_nonwork] <- sweep(data_post[, tact_ds_nonwork], 1, weekday_factor, "*")
+
   data_post[, semana_completa] <- data_post[, dias_semana] + data_post[, sabados] + data_post[, domingos]
   data_post[, care_semana_completa] <- data_post[, care_ds] + data_post[, care_sab] + data_post[, care_dom]
+  data_post[, tact_semana_completa] <- data_post[, tact_ds] + data_post[, tact_sab] + data_post[, tact_dom]
   data_post[, "t_total"] <- rowSums(data_post[, semana_completa])
+
+  # Store normalization factors for downstream use
+  data_post[, "tact_factor_sab"] <- as.numeric(unlist(24 / rowSums(data_post[, sabados])))
+  data_post[, "tact_factor_dom"] <- as.numeric(unlist(24 / rowSums(data_post[, domingos])))
+  data_post[, "tact_factor_ds"] <- as.numeric(unlist(weekday_factor))
 
   return(data_post)
 }
@@ -623,7 +694,10 @@ agregar_actividades <- function(data_post) {
         "t_tdnr_admnhog", "t_tdnr_comphog", "t_tdnr_cmp",
         "t_tcnr_ce", "t_tcnr_re", "t_tcnr_oac",
         "t_tvaoh_tv", "t_tvaoh_oh",
-        "t_cpaf_cp", "t_ed", "t_tt1", "t_tt2"
+        "t_cpaf_cp", "t_ed",
+        "t_tto", "t_ted", "t_tcpaf_cp",
+        "t_ttdnr_admnhog", "t_ttdnr_comphog",
+        "t_ttcnr_re", "t_ttcnr_oac_health", "t_ttcnr_oac_work"
       )) %>% rowSums(na.rm = TRUE),
       t_paid_work = t_to, # free
       t_domestic_work = dplyr::select(., c(
@@ -639,14 +713,36 @@ agregar_actividades <- function(data_post) {
       t_personal_care = t_cpaf_cp, # committed/free
       t_meals = t_cpag_comer, # committed/free
       t_sleep = t_cpag_dormir, # committed/free
-      t_commute1 = t_tt1,
-      t_commute2 = t_tt2
-    )
+      t_commute = t_tto + t_ted + t_tcpaf_cp + t_ttdnr_admnhog + t_ttdnr_comphog + t_ttcnr_re + t_ttcnr_oac_health + t_ttcnr_oac_work)
 
   data_post <- data_post %>%
     mutate(
       es_trabajador = case_when(trabaja == 1 & cae == "Ocupada(o)" & t_to > 0 ~ 1, T ~ 0),
       es_familia = case_when(trabaja == 1 & cae == "Ocupada(o)" & t_to > 0 & vive_pareja == 1 & tiene_hijos == 1 ~ 1, T ~ 0)
+    )
+
+  # Activity times for commute-associated activities (post-twin-imputation)
+  # _ds uses weekday values, _fds uses imputed weekend (sab + dom) values
+  # Normalization factors (tact_factor_*) are carried from impute_weekend
+  data_post <- data_post %>%
+    mutate(
+      # Activity times (already normalized in impute_weekend)
+      tact_tto_ds = to5_t_ds,
+      tact_tto_fds = to5_t_sab + to5_t_dom,
+      tact_ted_ds = ed4_t_ds,
+      tact_ted_fds = ed4_t_sab + ed4_t_dom,
+      tact_tcpaf_cp_ds = cp9_t_ds,
+      tact_tcpaf_cp_fds = cp9_t_sab + cp9_t_dom,
+      tact_ttdnr_admnhog_ds = td16_t_ds,
+      tact_ttdnr_admnhog_fds = td16_t_sab + td16_t_dom,
+      tact_ttdnr_comphog_ds = td22_t_ds,
+      tact_ttdnr_comphog_fds = td22_t_sab + td22_t_dom,
+      tact_ttcnr_re_ds = tc16_t_ds,
+      tact_ttcnr_re_fds = tc16_t_sab + tc16_t_dom,
+      tact_ttcnr_oac_health_ds = tc22_t_ds,
+      tact_ttcnr_oac_health_fds = tc22_t_sab + tc22_t_dom,
+      tact_ttcnr_oac_work_ds = NA_real_,
+      tact_ttcnr_oac_work_fds = NA_real_
     )
 
   data25 <- data_post %>%
@@ -661,7 +757,8 @@ agregar_actividades <- function(data_post) {
       bs1:bs19,
       all_of(ingresos),
       all_of(acts_corregidas),
-      all_of(acts_care_alternatives)
+      all_of(acts_care_alternatives),
+      all_of(tact_vars)
     ) %>%
     mutate(t_total = dplyr::select(., all_of(acts_corregidas)) %>% rowSums(na.rm = TRUE))
 
@@ -923,8 +1020,14 @@ rename_to_english_raw <- function(data) {
     t_media_audio            = "t_mcm_audio",
     t_media_video            = "t_mcm_video",
     t_media_computer         = "t_mcm_computador",
-    t_commute1               = "t_tt1",
-    t_commute2               = "t_tt2"
+    t_commute_to               = "t_tto",
+    t_commute_ed               = "t_ted",
+    t_commute_cpaf_cp          = "t_tcpaf_cp",
+    t_commute_tdnr_admnhog     = "t_ttdnr_admnhog",
+    t_commute_tdnr_comphog     = "t_ttdnr_comphog",
+    t_commute_tcnr_re          = "t_ttcnr_re",
+    t_commute_tcnr_ce          = "t_ttcnr_oac_health",
+    t_commute_tcnr_oac         = "t_ttcnr_oac_work"
   )
   swb_mapping <- setNames(paste0("bs", 1:19), paste0("swb", 1:19))
   data %>% dplyr::rename(any_of(c(.rename_common_eng, time_mapping, swb_mapping)))

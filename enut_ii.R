@@ -155,10 +155,14 @@
 #'   \item{t_meals}{Comer y beber; equivale a t_cpag_comer, horas semanales}
 #'   \item{t_sleep}{Dormir; equivale a t_cpag_dormir, ajustado para que la suma sea 168 horas,
 #'     horas semanales}
-#'   \item{t_commute1}{Traslados asociados a trabajo remunerado, educacion y salud; equivale a
-#'     t_tt1, horas semanales}
-#'   \item{t_commute2}{Traslados asociados a tramites del hogar y cuidados; equivale a t_tt2,
-#'     horas semanales}
+#'   \item{t_commute_to}{Traslados asociados a trabajo remunerado, horas semanales}
+#'   \item{t_commute_ed}{Traslados asociados a educacion, horas semanales}
+#'   \item{t_commute_cpaf_cp}{Traslados asociados a cuidados personales y salud, horas semanales}
+#'   \item{t_commute_tdnr_admnhog}{Traslados asociados a administracion del hogar, horas semanales}
+#'   \item{t_commute_tdnr_comphog}{Traslados asociados a compras del hogar, horas semanales}
+#'   \item{t_commute_tcnr_re}{Traslados asociados a cuidados relativos a la ensenanza, horas semanales}
+#'   \item{t_commute_tcnr_ce}{Traslados asociados a cuidados esenciales, horas semanales}
+#'   \item{t_commute_tcnr_oac}{Traslados asociados a otros cuidados, horas semanales}
 #'
 #'   \item{Tw}{Paid work time (equivalent to t_to / t_paid_work)}
 #'   \item{Tf_social}{Social life and recreation time (equivalent to t_vsyo_csar)}

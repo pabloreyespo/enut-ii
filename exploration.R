@@ -25,8 +25,14 @@ get_data(free_activities = list(
             t_leisure_video         = c("t_mcm_video"),
             t_leisure_computer         = c("t_mcm_computador"),
             t_meals = c("t_cpag_comer"),
-            t_commute = c("t_tt1"),
-            t_commute_new = c("t_tt2"),
+            t_commute_to = c("t_commute_to"),
+            t_commute_ed = c("t_commute_ed"),
+            t_commute_cpaf_cp = c("t_commute_cpaf_cp"),
+            t_commute_tdnr_admnhog = c("t_commute_tdnr_admnhog"),
+            t_commute_tdnr_comphog = c("t_commute_tdnr_comphog"),
+            t_commute_tcnr_re = c("t_commute_tcnr_re"),
+            t_commute_tcnr_ce = c("t_commute_tcnr_ce"),
+            t_commute_tcnr_oac = c("t_commute_tcnr_oac"),
             t_sleep = c("t_cpag_dormir")
             ))
 model_data <- model_data %>%  #%>% filter(ec > 0, ec <1)
@@ -39,7 +45,7 @@ model_data <- model_data %>%  #%>% filter(ec > 0, ec <1)
 dbs = model_data
 data_stack <- dbs %>%
   dplyr::select(id_persona, edad_anios, quintil, female, all_of(expenditures), all_of(times)) %>%
-  melt(measure.vars= 8:18, variable.name = "tipo_tiempo") %>%
+  melt(measure.vars= 8:25, variable.name = "tipo_tiempo") %>%
   mutate(value = as.numeric(value)) %>% rename(tiempo = value) %>%
   mutate(tipo_tiempo = case_when(
     tipo_tiempo == "t_paid_work"                ~ "Paid work",
@@ -51,8 +57,14 @@ data_stack <- dbs %>%
     tipo_tiempo == "t_leisure_computer"     ~ "Computer, Phone",
     tipo_tiempo == "t_meals" ~ "Meals",
     tipo_tiempo == "t_sleep" ~ "Sleep",
-    tipo_tiempo == "t_commute" ~ "Commute",
-    tipo_tiempo == "t_commute_new" ~ "Commute (new)",
+    tipo_tiempo == "t_commute_to" ~ "Commute (work)",
+    tipo_tiempo == "t_commute_ed" ~ "Commute (education)",
+    tipo_tiempo == "t_commute_cpaf_cp" ~ "Commute (health)",
+    tipo_tiempo == "t_commute_tdnr_admnhog" ~ "Commute (household admin)",
+    tipo_tiempo == "t_commute_tdnr_comphog" ~ "Commute (household shopping)",
+    tipo_tiempo == "t_commute_tcnr_re" ~ "Commute (care - education)",
+    tipo_tiempo == "t_commute_tcnr_ce" ~ "Commute (care - essential)",
+    tipo_tiempo == "t_commute_tcnr_oac" ~ "Commute (care - other)",
     tipo_tiempo == "Tc" ~ "Other",
     T ~ "-"))
 

@@ -174,10 +174,50 @@
 #'   \item{t_mcm_video}{Medios de comunicacion y masivos - consumo de video y television, horas semanales}
 #'   \item{t_mcm_computador}{Medios de comunicacion y masivos - uso recreativo de computador e internet,
 #'     horas semanales}
-#'   \item{t_tt1}{Traslados 1 - traslados asociados a trabajo remunerado, educacion y salud (equivalente
-#'     ENUT 2015), horas semanales}
-#'   \item{t_tt2}{Traslados 2 - traslados asociados a tramites del hogar y cuidados (adicionales ENUT 2023),
+#'   \item{t_tto}{Traslados asociados a trabajo remunerado (traslado ida: to3_t, vuelta: to7_t),
 #'     horas semanales}
+#'   \item{t_ted}{Traslados asociados a educacion (traslado ida: ed2_t, vuelta: ed5_t),
+#'     horas semanales}
+#'   \item{t_tcpaf_cp}{Traslados asociados a cuidados personales y salud
+#'     (traslado ida: cp7_t, vuelta: cp10_t), horas semanales}
+#'   \item{t_ttdnr_admnhog}{Traslados asociados a administracion del hogar
+#'     (traslado ida: td14_t, vuelta: td17_t), horas semanales}
+#'   \item{t_ttdnr_comphog}{Traslados asociados a compras del hogar
+#'     (traslado ida: td20_t, vuelta: td23_t), horas semanales}
+#'   \item{t_ttcnr_re}{Traslados asociados a cuidados relativos a la ensenanza
+#'     (traslado ida: tc12_t, vuelta: tc15_t), horas semanales}
+#'   \item{t_ttcnr_oac_health}{Traslados asociados a cuidados esenciales / salud
+#'     (traslado ida: tc21_t, vuelta: tc25_t), horas semanales}
+#'   \item{t_ttcnr_oac_work}{Traslados asociados a otros cuidados / trabajo
+#'     (traslado ida: tc31_t, vuelta: tc34_t), horas semanales}
+#'
+#'   \strong{Commute activity time variables} (associated activity time within
+#'   each commute total; computed after twin imputation). The \code{_ds} suffix
+#'   uses weekday values. The \code{_fds} suffix uses imputed weekend
+#'   (sab + dom) values. All times are normalized using the same factors as
+#'   parent activities (see \code{tact_factor_*}):
+#'   \item{tact_tto_ds}{Workplace time (to5_t) associated with commute to work, weekday hours}
+#'   \item{tact_tto_fds}{Workplace time (to5_t) associated with commute to work, weekend hours}
+#'   \item{tact_ted_ds}{Education center time (ed4_t) associated with commute to education, weekday hours}
+#'   \item{tact_ted_fds}{Education center time (ed4_t) associated with commute to education, weekend hours}
+#'   \item{tact_tcpaf_cp_ds}{Health/personal care center time (cp9_t) associated with commute to personal care, weekday hours}
+#'   \item{tact_tcpaf_cp_fds}{Health/personal care center time (cp9_t) associated with commute to personal care, weekend hours}
+#'   \item{tact_ttdnr_admnhog_ds}{Domestic admin time (td16_t) associated with commute to domestic admin, weekday hours}
+#'   \item{tact_ttdnr_admnhog_fds}{Domestic admin time (td16_t) associated with commute to domestic admin, weekend hours}
+#'   \item{tact_ttdnr_comphog_ds}{Domestic shopping time (td22_t) associated with commute to domestic shopping, weekday hours}
+#'   \item{tact_ttdnr_comphog_fds}{Domestic shopping time (td22_t) associated with commute to domestic shopping, weekend hours}
+#'   \item{tact_ttcnr_re_ds}{Care education time (tc16_t) associated with commute to care-education, weekday hours}
+#'   \item{tact_ttcnr_re_fds}{Care education time (tc16_t) associated with commute to care-education, weekend hours}
+#'   \item{tact_ttcnr_oac_health_ds}{Care health time (tc22_t) associated with commute to care-other, weekday hours}
+#'   \item{tact_ttcnr_oac_health_fds}{Care health time (tc22_t) associated with commute to care-other, weekend hours}
+#'   \item{tact_ttcnr_oac_work_ds}{Care work time associated with commute to care-other, weekday hours; always NA (no single associated activity)}
+#'   \item{tact_ttcnr_oac_work_fds}{Care work time associated with commute to care-other, weekend hours; always NA}
+#'
+#'   \strong{Normalization factors} (applied during twin imputation to scale
+#'   activities to 24 hours per day):
+#'   \item{tact_factor_sab}{Saturday normalization factor: 24 / sum(all activities on Saturday)}
+#'   \item{tact_factor_dom}{Sunday normalization factor: 24 / sum(all activities on Sunday)}
+#'   \item{tact_factor_ds}{Weekday redistribution factor: (24*5 - t_to_ds) / sum(non-t_to activities on weekdays)}
 #'
 #'   \item{t_total}{Total weekly hours across all activities (should equal 168)}
 #'   \item{w}{Hourly wage rate: ing_trab / t_to (thousands CLP per hour)}
@@ -200,9 +240,18 @@
 #' The dataset is produced by running \code{data_processing/data_processing.R}. Time
 #' variables are normalized to a 168-hour week using a two-step procedure: paid work
 #' (\code{t_to}) and sleep (\code{t_cpag_dormir}) are treated as reliable anchors;
-#' all other activities are scaled proportionally. Weekend time use is imputed via a
-#' twin-matching matrix when the respondent's diary day was a weekday. Outliers are
-#' removed using Vallejo's method by groups of quintile, employment status, age
+#' all other activities are scaled proportionally. Commute time is decomposed into 8
+#' separate totals (\code{t_tto}, \code{t_ted}, \code{t_tcpaf_cp}, \code{t_ttdnr_admnhog},
+#' \code{t_ttdnr_comphog}, \code{t_ttcnr_re}, \code{t_ttcnr_oac_health}, \code{t_ttcnr_oac_work})
+#' based on the classification in \code{clasificacion_traslado.csv}. Weekend time use is
+#' imputed via a twin-matching matrix when the respondent's diary day was a weekday;
+#' this imputation also extends to the commute component variables used for percentage
+#' computation. Activity time variables (\code{tact_*}) store the actual hours
+#' spent on associated activities within each commute total, normalized using
+#' the same factors as parent activities. Normalization factors (\code{tact_factor_*})
+#' are saved for reference: \code{tact_factor_sab} and \code{tact_factor_dom} for
+#' weekend scaling, \code{tact_factor_ds} for weekday redistribution.
+#' Outliers are removed using Vallejo's method by groups of quintile, employment status, age
 #' bracket, and sex. Expenditures are imputed from EPF IX using a fractional MNL
 #' model for budget shares and a linear regression for the savings rate, then
 #' allocated to individuals by \code{prop_ing_hogar}. The script writes
@@ -217,5 +266,5 @@
 #' @keywords datasets
 #' @name enut_ii_raw
 #' @usage data(enut_ii_raw)
-#' @format A data frame with approximately 4,000-5,000 rows and 112 variables
+#' @format A data frame with approximately 4,000-5,000 rows and 129 variables
 NULL
