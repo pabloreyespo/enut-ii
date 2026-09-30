@@ -6,7 +6,8 @@ invisible(lapply(pkgs, library, character.only = TRUE))
 
 acts_corregidas <- c(
   # confiables:
-  "t_to",
+  "t_to", # trabajo en la ocupacion, sin traslados (to3, to7) ni busqueda (to9)
+  "t_to_js", # busqueda de trabajo o inicio de negocio (to9)
   "t_tcnr_ce", # cuidados escenciales
   "t_tcnr_re", # cuidados relativos a la eseñanza
   "t_tcnr_oac", # otros cuidados
@@ -29,8 +30,11 @@ acts_corregidas <- c(
   "t_cpag_comer",
   "t_cpag_dormir",
   "t_ed",
-  "t_vsyo_csar", # convivencia social y actividades recreativas
-  "t_vsyo_aa", # arte y aficiones
+  "t_vsyo_csar", # convivencia social y actividades recreativas (vs1 + vs3)
+  "t_vsyo_aa", # arte y aficiones (vs4 + vs5)
+  "t_vsyo_ev", # asistencia como publico a eventos culturales o deportivos (vs2)
+  "t_vsyo_dep", # practica de deporte o ejercicio fisico (vs6)
+  "t_descanso", # descanso, meditacion o relajacion (vs11)
 
   "t_mcm_leer",
   "t_mcm_video",
@@ -87,24 +91,30 @@ tact_component_vars_nonwork <- tact_component_vars[tact_component_vars != "to5_t
 
 t_agregados <- c(
   "t_paid_work",
+  "t_job_search",
   "t_domestic_work",
   "t_care_work",
   "t_unpaid_voluntary",
   "t_education",
   "t_leisure",
+  "t_rest",
   "t_personal_care",
   "t_meals",
-  "t_sleep"
+  "t_sleep",
+  "t_commute"
 )
 
 t_agregados_new <- c(
   "Tw",
   "Tf_social",
+  "Tf_events",
   "Tf_hobbies",
+  "Tf_sports",
   "Tf_read",
   "Tf_listen",
   "Tf_watch",
   "Tf_computer",
+  "Tf_rest",
   "Tc_meals",
   "Tc_sleep",
   "Tc_other"
@@ -229,7 +239,8 @@ new_variables_prefilter <- function(data) {
       edad_promedio = mean(edad)
     ) %>%
     mutate(
-      hay_tercera_edad = case_when(n_tercera_edad > 1 ~ 1 & tercera_edad == 0, T ~ 0),
+      # at least one member aged 60+ other than the respondent
+      hay_tercera_edad = case_when(n_tercera_edad - tercera_edad >= 1 ~ 1, T ~ 0),
       n_personas = max(hhsize, na.rm = T)
     ) %>%
     ungroup()
@@ -257,7 +268,8 @@ new_variables_prefilter <- function(data) {
     ) %>%
     mutate(ingresos_propios = ing_trab + ing_jub_aps) %>%
     group_by(id_hog) %>%
-    mutate(ing_g = (sum(ing_t_hogar) - sum(ing_trab) + sum(ing_jub_aps)) * (ing_t_hogar > 0)) %>%
+    # other household income: total minus labor and pension income of members
+    mutate(ing_g = (sum(ing_t_hogar) - sum(ing_trab) - sum(ing_jub_aps)) * (ing_t_hogar > 0)) %>%
     mutate(prop_ing_hogar = ingresos_propios / sum(ingresos_propios)) %>%
     mutate(ingreso_hogar = sum(ingresos_propios) + sum(ing_g)) %>%
     mutate(ing_gpp = sum(ing_g) * prop_ing_hogar) %>%
@@ -330,6 +342,10 @@ na_completion <- function(data) {
     "t_ed",
     "t_vsyo_csar", # convivencia social y actividades recreativas
     "t_vsyo_aa", # arte y aficiones
+    "to9_t", # busqueda de trabajo (incluida en t_to)
+    "vs2_t", # eventos como publico (fuera de t_vsyo_csar y t_vsyo_aa)
+    "vs6_t", # deporte o ejercicio fisico (fuera de t_vsyo_csar y t_vsyo_aa)
+    "vs11_t", # descanso (fuera de t_vsyo y t_mcm)
     "vs7_t",
     "vs8_t",
     "vs9_t",
@@ -367,6 +383,25 @@ na_completion <- function(data) {
       t_cpag_dormir_ds = cp1_t_ds,
       t_cpag_dormir_fds = cp1_t_fds,
     ) %>%
+    # INE aggregates already contain their commutes and job search:
+    # t_to = to3 + to5 + to7 + to9, t_ed = ed2 + ed4 + ed5 + ed7 + ed8,
+    # t_tcnr_oac = ... + tc21 + tc25 + tc31 + tc34. Those components are
+    # removed here because they are added back as t_tto, t_ted, t_ttcnr_* and
+    # t_to_js below.
+    mutate(
+      t_to_js_ds = to9_t_ds,
+      t_to_js_fds = to9_t_fds,
+      t_to_ds = t_to_ds - to3_t_ds - to7_t_ds - to9_t_ds,
+      t_to_fds = t_to_fds - to3_t_fds - to7_t_fds - to9_t_fds,
+      t_ed_ds = t_ed_ds - ed2_t_ds - ed5_t_ds,
+      t_ed_fds = t_ed_fds - ed2_t_fds - ed5_t_fds,
+      t_vsyo_ev_ds = vs2_t_ds,
+      t_vsyo_ev_fds = vs2_t_fds,
+      t_vsyo_dep_ds = vs6_t_ds,
+      t_vsyo_dep_fds = vs6_t_fds,
+      t_descanso_ds = vs11_t_ds,
+      t_descanso_fds = vs11_t_fds
+    ) %>%
     mutate(
       t_cpaf_af_ds = t_cpaf_af_ds - t_cpag_dormir_ds - t_cpag_comer_ds,
       t_cpaf_af_fds = t_cpaf_af_fds - t_cpag_dormir_fds - t_cpag_comer_fds,
@@ -378,10 +413,9 @@ na_completion <- function(data) {
       t_tdnr_comphog_fds = t_tdnr_comphog_fds - td20_t_fds - td23_t_fds,
       t_tcnr_re_ds = t_tcnr_re_ds - tc12_t_ds - tc15_t_ds,
       t_tcnr_re_fds = t_tcnr_re_fds - tc12_t_fds - tc15_t_fds,
-      t_tcnr_ce_ds = t_tcnr_ce_ds, # 21 y 25 quedan afuera
-      t_tcnr_ce_fds = t_tcnr_ce_fds ,
-      t_tcnr_oac_ds = t_tcnr_oac_ds - tc21_t_ds - tc25_t_ds,
-      t_tcnr_oac_fds = t_tcnr_oac_fds - tc21_t_fds - tc25_t_fds,
+      # tc21/tc25 (health) and tc31/tc34 (work) commutes are inside t_tcnr_oac
+      t_tcnr_oac_ds = t_tcnr_oac_ds - tc21_t_ds - tc25_t_ds - tc31_t_ds - tc34_t_ds,
+      t_tcnr_oac_fds = t_tcnr_oac_fds - tc21_t_fds - tc25_t_fds - tc31_t_fds - tc34_t_fds,
 
       t_tto_ds = dplyr::select(., all_of(paste0(act_traslados$to, "_ds"))) %>% rowSums(na.rm = T),
       t_tto_fds = dplyr::select(., all_of(paste0(act_traslados$to, "_fds"))) %>% rowSums(na.rm = T),
@@ -420,7 +454,7 @@ na_completion <- function(data) {
 
 outlier_detection_Vallejo <- function(data) {
   data["dias_normal"] <- TRUE
-  temp <- data %>%
+  data <- data %>%
     # group_by(años_escolaridad, k11_1_1, rango_edad,sexo) %>%
     group_by(quintil, trabaja, tramo_edad, sexo) %>%
     mutate(
@@ -441,8 +475,8 @@ outlier_detection_Vallejo <- function(data) {
       t_total_fds < lower_limit_fds | t_total_fds > upper_limit_fds ~ FALSE,
       TRUE ~ TRUE
     )) %>%
-    filter(dias_normal == TRUE) %>%
-    return(data)
+    filter(dias_normal == TRUE)
+  return(data)
 }
 
 new_variables_postfilter <- function(data) {
@@ -697,14 +731,18 @@ agregar_actividades <- function(data_post) {
     mutate(
       Tw = t_to,
       Tf_social = t_vsyo_csar,
+      Tf_events = t_vsyo_ev,
       Tf_hobbies = t_vsyo_aa,
+      Tf_sports = t_vsyo_dep,
       Tf_read = t_mcm_leer,
       Tf_listen = t_mcm_audio,
       Tf_watch = t_mcm_video,
       Tf_computer = t_mcm_computador,
+      Tf_rest = t_descanso,
       Tc_meals = t_cpag_comer,
       Tc_sleep = t_cpag_dormir,
       Tc_other = dplyr::select(., c(
+        "t_to_js",
         "t_tdnr_psc", "t_tdnr_lv", "t_tdnr_lrc", "t_tdnr_mrm",
         "t_tdnr_admnhog", "t_tdnr_comphog", "t_tdnr_cmp",
         "t_tcnr_ce", "t_tcnr_re", "t_tcnr_oac",
@@ -715,6 +753,7 @@ agregar_actividades <- function(data_post) {
         "t_ttcnr_re", "t_ttcnr_oac_health", "t_ttcnr_oac_work"
       )) %>% rowSums(na.rm = TRUE),
       t_paid_work = t_to, # free
+      t_job_search = t_to_js,
       t_domestic_work = dplyr::select(., c(
         "t_tdnr_psc", "t_tdnr_lv", "t_tdnr_lrc", "t_tdnr_mrm",
         "t_tdnr_admnhog", "t_tdnr_comphog", "t_tdnr_cmp",
@@ -724,7 +763,8 @@ agregar_actividades <- function(data_post) {
         rowSums(na.rm = TRUE), # commited/free
       t_unpaid_voluntary = t_tvaoh_tv + t_tvaoh_oh, # free
       t_education = t_ed, # committed / free
-      t_leisure = t_vsyo_csar + t_vsyo_aa + t_mcm_leer + t_mcm_video + t_mcm_audio + t_mcm_computador, # free
+      t_leisure = t_vsyo_csar + t_vsyo_ev + t_vsyo_aa + t_vsyo_dep + t_mcm_leer + t_mcm_video + t_mcm_audio + t_mcm_computador, # free
+      t_rest = t_descanso,
       t_personal_care = t_cpaf_cp, # committed/free
       t_meals = t_cpag_comer, # committed/free
       t_sleep = t_cpag_dormir, # committed/free
@@ -803,10 +843,19 @@ agregar_actividades <- function(data_post) {
 
   data11[, c(t_agregados, t_agregados_new)] <- round(data11[, c(t_agregados, t_agregados_new)], 2)
   data11[, acts_care_alternatives] <- round(data11[, acts_care_alternatives], 2)
-  data11[, "temp"] <- rowSums(data11[, t_agregados])
-  data11[, "t_sleep"] <- data11[, "t_sleep"] - (data11[, "temp"] - 168)
-  data11[, "Tc_sleep"] <- data11[, "Tc_sleep"] - (data11[, "temp"] - 168)
-  data11[, "temp"] <- rowSums(data11[, t_agregados])
+  # Sleep absorbs the rounding residual of each classification separately.
+  data11[, "t_sleep"] <- data11[, "t_sleep"] - (rowSums(data11[, t_agregados]) - 168)
+  data11[, "Tc_sleep"] <- data11[, "Tc_sleep"] - (rowSums(data11[, t_agregados_new]) - 168)
+  data11[, "t_total"] <- rowSums(data11[, t_agregados])
+  data11 <- data11 %>% dplyr::select(-any_of("temp"))
+
+  check_168 <- function(df, cols, label) {
+    gap <- max(abs(rowSums(df[, cols]) - 168))
+    if (gap > 1e-6) stop(label, " does not add up to 168 hours (max gap ", gap, ")")
+  }
+  check_168(data25, acts_corregidas, "enut-ii-raw activities")
+  check_168(data11, t_agregados, "enut-ii aggregated classification")
+  check_168(data11, t_agregados_new, "enut-ii Tw/Tf/Tc classification")
 
   return(list(data25 = data25, data11 = data11))
 }
@@ -827,7 +876,9 @@ imputacion_gastos <- function(data) {
     mutate(
       n_personas_cut = case_when(n_personas >= 7 ~ 7, T ~ n_personas),
       n_menores_0_4_cut = case_when(n_menores_0_4 >= 3 ~ 3, T ~ n_menores_0_4),
-      n_menores_5_14_cut = case_when(n_menores_5_14 >= 3 ~ 3, T ~ n_menores_5_14),
+      # same coding as the EPF data the FMNL and savings models were fitted on
+      # (expenditures.R): 2 or more children aged 5 to 14 are coded as 3
+      n_menores_5_14_cut = case_when(n_menores_5_14 >= 2 ~ 3, T ~ n_menores_5_14),
       n_personas_15_65_cut = case_when(n_personas_15_65 >= 3 ~ 3, T ~ n_personas_15_65),
       n_trabajadores_cut = case_when(n_trabajadores >= 3 ~ 3, T ~ n_trabajadores),
       n_profesionales_cut = case_when(n_profesionales >= 2 ~ 3, T ~ n_profesionales)
@@ -1006,6 +1057,7 @@ imputacion_gastos <- function(data) {
 rename_to_english_raw <- function(data) {
   time_mapping <- c(
     t_paid_work              = "t_to",
+    t_job_search             = "t_to_js",
     t_care_essential         = "t_tcnr_ce",
     t_care_education_related = "t_tcnr_re",
     t_care_other             = "t_tcnr_oac",
@@ -1031,6 +1083,9 @@ rename_to_english_raw <- function(data) {
     t_education              = "t_ed",
     t_leisure_social         = "t_vsyo_csar",
     t_leisure_hobbies        = "t_vsyo_aa",
+    t_leisure_events         = "t_vsyo_ev",
+    t_leisure_sports         = "t_vsyo_dep",
+    t_rest                   = "t_descanso",
     t_media_reading          = "t_mcm_leer",
     t_media_audio            = "t_mcm_audio",
     t_media_video            = "t_mcm_video",
