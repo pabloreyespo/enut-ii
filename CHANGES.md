@@ -150,3 +150,45 @@ Other changes:
 - New household variable `n_15_mas` (members aged 15+).
 - `n_profesionales` in the ENUT uses `na.rm = TRUE`: a member without education
   level left the whole household with `NA` and no imputed expenditure (7 people).
+
+## 9. Savings from the same donors (`_jdi`) and FMNL aggregates (`_fmnl`)
+
+`imputacion_gastos()` now always writes two sets of broad categories (Ef1 =
+food + recreation + restaurants + communications, Ef2 = clothing, Ec = bills +
+household + health + transport + education), allocated to each person by
+`prop_ing_hogar` like the other amounts:
+
+- `Ef1_jdi`, `Ef2_jdi`, `Ec_jdi`, `savings_jdi`: cell hot-deck where savings
+  and expenditure come from the same EPF donors. Each donor contributes its
+  (10 divisions, savings) / household income vector, which sums to one; the
+  household gets the mean over its donors times its own income, so
+  Ef1 + Ef2 + Ec + savings = income. The draw and the cells are the ones of
+  section 8 (the same random draw as the unsuffixed hot-deck columns). The
+  scheme is inspired by the data fusion of Hawkins and Habib (2022,
+  Transportation), which averages the household expenditure of one record per
+  member aged 15 or more.
+- `Ef1_fmnl`, `Ef2_fmnl`, `Ec_fmnl`, `savings_fmnl`: FMNL shares times
+  (income - savings), with savings from the regression.
+
+Why: the savings regression has no residual, so it removed the dispersion of
+savings (R2 between 0.36 and 0.59 in the EPF of the three big cities), and,
+being linear in pesos, it predicted savings rates below -1 for low incomes,
+outside the EPF support (the EPF sample drops those households). Taking savings
+from the donors keeps its dispersion, its relation with the composition of
+expenditure and the EPF support. The same change was made in enut-bigcities.
+
+The unsuffixed columns (the 10 divisions, `savings`, `total_expenses`) are
+unchanged, so existing models give the same results. The FMNL model
+(`output/FMNL-epf-ix`) is now always loaded.
+
+## Household income split (`repartir_ingreso()`)
+- Rents (`y7b`) and transfers from outside the household such as child support (`y8b`) are now the
+  income of whoever receives them (`ing_otros`). Before, they fell into the household residual `ing_g`,
+  which was split in proportion to labor and pension income, so a person without a salary who
+  received child support ended up with zero income, expenditure and savings.
+- If nobody in the household has own income, the residual is split equally among members aged 15+.
+  Before, `0/0` was replaced by 0 and the whole household income disappeared (252 households).
+- `ing_gpp` = `ing_otros` + share of the residual, so `ing_personal = ing_trab + ing_jub_aps + ing_gpp`
+  and `fixed_income` in `utils.R` are unchanged. `I` now includes `ing_otros`. `ingreso_hogar` and the
+  quintiles do not change.
+- Tests: `Rscript tests/test_ingresos.R`.

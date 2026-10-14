@@ -124,7 +124,7 @@
 #'   \item{ing_g}{Imputed group income component from household total (weekly, thousands CLP)}
 #'   \item{ing_t_hogar}{Total household income (weekly, thousands CLP)}
 #'   \item{ing_t_pc}{Per capita household income (weekly, thousands CLP)}
-#'   \item{ing_gpp}{Individual share of group income (weekly, thousands CLP)}
+#'   \item{ing_gpp}{Non-labor, non-pension income of the person: own rents and transfers (ing_otros) plus a share of the household residual income (weekly, thousands CLP)}
 #'   \item{ing_personal}{Personal income: ing_trab + ing_jub_aps + ing_gpp (weekly, thousands CLP)}
 #'   \item{ingreso_hogar}{Total household disposable income (weekly, thousands CLP)}
 #'   \item{income_person_week}{Household income divided by number of members (weekly, thousands CLP)}

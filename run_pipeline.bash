@@ -26,6 +26,7 @@ ml purge
 ml intel/2022.00
 ml Python/3.12.3
 source enut-env/bin/activate
+export OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1
 TWIN_WORKERS=${SLURM_CPUS_PER_TASK:-10} python data_processing/gemelos_matriz.py
 deactivate
 
