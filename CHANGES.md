@@ -99,3 +99,54 @@ from the item level times.
 Because fixes 1, 2, 4 and 6 change the Vallejo filter and the quintiles, the
 pre weekend sample changes (15,008 to 15,199 rows) and the twin matrix must
 be rebuilt before running the rest of the pipeline.
+
+## 7. Professionals in the expenditure models
+
+`n_profesionales` in `expenditures.R` counted `edunivel >= 14`. That cut comes
+from the VIII EPF coding, where 14 is a professional degree; in the IX EPF 14 is
+only a doctorate (89 people in the whole survey), so almost no EPF household had
+professionals while most ENUT households do (`nivel_escolaridad >= 4`). The FMNL
+and savings coefficients on `n_profesionales_cut` were therefore estimated on a
+handful of households and extrapolated to the ENUT. It now counts a completed
+technical tertiary, professional or postgraduate degree (`edunivel >= 10` and
+`edutermina != 2`, 9,827 people), the same group the ENUT counts.
+
+Because the EPF covariate changes, `data/gastos.csv` and the `FMNL-epf-ix` model
+must be re-estimated (`run_expenditures.bash`) before running
+`data_processing.R` again.
+
+## 8. Expenditure imputation with EPF strata (Hawkins hot-deck)
+
+`imputacion_gastos()` now has `metodo = "hawkins"` (default) besides the FMNL
+(`metodo = "fmnl"`). The household savings regression is unchanged; the
+composition of expenditure (the 10 divisions) comes from a cell hot-deck in the
+spirit of Hawkins (2021, ch. 7): each ENUT household gets the mean of the
+expenditure shares of m EPF households drawn from its cell, with m = household
+members aged 15 or more. Cells, finest first (the first with at least 10 EPF
+households is used):
+
+1. EPF sampling stratum x quintile. The stratum follows from the comuna and the
+   NSE of the ENUT household: the comuna is now kept as `cut` (from `varunit`) and
+   `data/epf_estratos_comunas.csv` lists the comunas and socioeconomic level of
+   each of the 79 IX EPF strata (Metodologia IX EPF, Tabla 16).
+2. Region x NSE x quintile (comunas that are not in the EPF).
+3. Macrozone x NSE x quintile. 4. Macrozone x quintile.
+
+Assumption: the ENUT `NSE` is the same UPM classification used by the EPF
+(1 low, 2 middle, 3 high). On the current `enut-ii-raw` sample, 74% of households
+use cell 1, 24% cell 2 and 2% cell 3.
+
+Cross-validation on the EPF (5 folds, Ef1/Ef2/Ec shares): the hot-deck has a
+larger error per household than the FMNL (RMSE of the Ef1 share 0.197 vs 0.160)
+but keeps 78% of the observed dispersion instead of 32%, and keeps households
+with zero spending in a division. Using the strata lowers the hot-deck error by
+3% relative to the original Hawkins cells (macrozone x quintile x household
+size).
+
+Other changes:
+- `expenditures.R` keeps the stratum (`estrato`) and household NSE (`nse`) in
+  `data/gastos.csv`, and `Rscript data_processing/expenditures.R --solo-datos`
+  writes that file without re-estimating the FMNL (the hot-deck only needs it).
+- New household variable `n_15_mas` (members aged 15+).
+- `n_profesionales` in the ENUT uses `na.rm = TRUE`: a member without education
+  level left the whole household with `NA` and no imputed expenditure (7 people).

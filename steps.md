@@ -7,6 +7,8 @@ Below is the complete step-by-step workflow required to process the data from ab
 - **What it does**: This script loads the EPF surveys (`base-personas-ix-epf-stata.dta` and `base-gastos-ix-epf-stata.dta`). It maps the variables, creates the standard `data/gastos.csv` file, and estimates the Fractional MNL model via Apollo (`FMNL-epf-ix`).
 - **Why do it now**: The models and the `.csv` generated here are strict dependencies required later when ENUT time records try to impute their budget shares. 
 
+*Hawkins imputation only:* `Rscript data_processing/expenditures.R --solo-datos` writes `data/gastos.csv` (with the EPF stratum and NSE) without estimating the FMNL. `imputacion_gastos()` uses `metodo = "hawkins"` by default; the FMNL model is needed only with `metodo = "fmnl"`. See CHANGES.md, section 8.
+
 ### 2. Generate the Preliminary ENUT DataFrame
 **Script to run:** `Rscript data_processing/data_processing.R --pre`
 - **What it does**: Runs the script from the top down to `write_csv(..., "data/raw/ENUT_PRE_WEEKEND_IMPUTATION.csv")` and stops there (the `--pre` flag). 

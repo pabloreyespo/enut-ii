@@ -147,6 +147,7 @@ composicion_hogar <- c(
   "n_tercera_edad",
   "hay_tercera_edad",
   "n_personas",
+  "n_15_mas",
   "edad_promedio",
   "tiene_hijos",
   "en_pareja",
@@ -158,6 +159,7 @@ sociodemograficas <- c(
   "edad_anios",
   "tramo_edad",
   "NSE",
+  "cut",
   "nivel_escolaridad",
   "estudia",
   "trabaja",
@@ -193,6 +195,8 @@ new_variables_prefilter <- function(data) {
       mayor_edad = case_when(edad >= 18 ~ 1, TRUE ~ 0),
       tercera_edad = case_when(edad >= 60 ~ 1, TRUE ~ 0),
       nivel_escolaridad = nivel_educ,
+      # comuna (CUT): varunit = "2023" + region (3) + provincia (1) + comuna (2) + conglomerado (4)
+      cut = as.integer(substr(varunit, 5, 10)),
       # (1: 0,1; 2: 2,3,4; 3: 5,6,7,9; 4:8, 5:10,11,12)
 
       # tiene_hijos = case_when(t11_1_3 < 6 ~ 1, TRUE ~ 0),
@@ -235,8 +239,9 @@ new_variables_prefilter <- function(data) {
       n_tercera_edad = sum(tercera_edad, na.rm = TRUE),
       n_tiempo = sum(tiempo, na.rm = T),
       n_trabajadores = sum(trabaja, na.rm = T),
-      n_profesionales = sum(nivel_escolaridad >= 4),
-      edad_promedio = mean(edad)
+      n_profesionales = sum(nivel_escolaridad >= 4, na.rm = TRUE),
+      edad_promedio = mean(edad),
+      n_15_mas = sum(edad >= 15, na.rm = TRUE)
     ) %>%
     mutate(
       # at least one member aged 60+ other than the respondent
@@ -865,12 +870,61 @@ agregar_actividades <- function(data_post) {
 #   summarise(cuantos = n())
 #######
 
-imputacion_gastos <- function(data) {
+# Hot-deck tipo Hawkins (2021, cap. 7) para la composicion del gasto. Cada hogar ENUT recibe el
+# promedio de las participaciones de gasto (10 divisiones) de m hogares EPF sorteados de su celda,
+# con m = integrantes de 15 anios o mas. Celdas, de la mas fina a la mas gruesa (se usa la primera
+# con al menos `min_donantes` hogares EPF):
+#   1. estrato EPF x quintil: el estrato sale de la comuna (cut) y el NSE del hogar ENUT
+#      (data/epf_estratos_comunas.csv, Metodologia IX EPF Tabla 16);
+#   2. region x NSE x quintil (hogares de comunas que no estan en la EPF);
+#   3. macrozona x NSE x quintil;  4. macrozona x quintil.
+# Supuesto: el NSE de la ENUT es la misma clasificacion de la UPM que usa la EPF (1 bajo, 3 alto).
+imputar_hawkins <- function(data_hogar, gastos, min_donantes = 10, semilla = 2023) {
+  set.seed(semilla)
+  mapa <- read.csv("data/epf_estratos_comunas.csv")
+  gastos$region <- mapa$region[match(gastos$estrato, mapa$estrato)]
+  shares <- as.matrix(gastos[, paste0("g.", alts)]) / gastos$total_expenses
+  colnames(shares) <- alts
+
+  donantes <- function(cut, nse, region, macrozona, quintil) {
+    estratos <- mapa$estrato[mapa$cut == cut & mapa$nse == nse]
+    q <- gastos$quintil == quintil
+    celdas <- list(
+      "estrato x quintil" = q & gastos$estrato %in% estratos,
+      "region x NSE x quintil" = q & gastos$region == region & gastos$nse == nse,
+      "macrozona x NSE x quintil" = q & gastos$macrozona == macrozona & gastos$nse == nse,
+      "macrozona x quintil" = q & gastos$macrozona == macrozona
+    )
+    for (nivel in names(celdas)) {
+      idx <- which(celdas[[nivel]] %in% TRUE)
+      if (length(idx) >= min_donantes) return(list(idx = idx, nivel = nivel))
+    }
+    list(idx = which(q), nivel = "quintil")
+  }
+
+  data_hogar <- data_hogar %>% mutate(region = cut %/% 1000, clave = paste(cut, NSE, quintil, macrozona))
+  P <- matrix(NA_real_, nrow(data_hogar), length(alts), dimnames = list(NULL, alts))
+  nivel <- character(nrow(data_hogar))
+  for (k in unique(data_hogar$clave)) {
+    filas <- which(data_hogar$clave == k)
+    h <- data_hogar[filas[1], ]
+    d <- donantes(h$cut, h$NSE, h$region, h$macrozona, h$quintil)
+    for (i in filas) {
+      m <- max(1, data_hogar$n_15_mas[i])
+      P[i, ] <- colMeans(shares[d$idx[sample.int(length(d$idx), m, replace = TRUE)], , drop = FALSE])
+    }
+    nivel[filas] <- d$nivel
+  }
+  print(table(nivel))
+  P
+}
+
+imputacion_gastos <- function(data, metodo = "hawkins") {
   library("minpack.lm")
   data_hogar <- data %>%
     dplyr::select(
       id_hog, n_personas, n_menores_0_4, n_menores_5_14, n_personas_15_65, n_menores_18, n_trabajadores, n_personas,
-      edad_promedio, quintil, macrozona, ingreso_hogar, income_person_week, n_profesionales
+      edad_promedio, quintil, macrozona, ingreso_hogar, income_person_week, n_profesionales, cut, NSE, n_15_mas
     ) %>%
     distinct(id_hog, .keep_all = T) %>%
     mutate(
@@ -886,7 +940,7 @@ imputacion_gastos <- function(data) {
   # hist(gastos$savings/gastos$ingresos, breaks =100)
   gastos <<- read.csv("data/gastos.csv") %>% filter(ingreso_hogar > 0, savings / ingreso_hogar > -1)
 
-  model <<- apollo_loadModel("output/FMNL-epf-ix")
+  if (metodo != "hawkins") model <<- apollo_loadModel("output/FMNL-epf-ix")
   lin_reg <<- lm(
     savings ~
       ingreso_hogar +
@@ -938,21 +992,27 @@ imputacion_gastos <- function(data) {
     ))
   data_hogar$id_hogar <- 1:nrow(data_hogar)
 
-  apollo_initialise()
-  apollo_control <<- list(
-    modelName       = "FMNL",
-    modelDescr      = "Fractional MNL model on time use data",
-    indivID         = "id_hogar",
-    outputDirectory = "output"
-  )
-  apollo_probabilities <<- model$apollo_probabilities
-  database <<- data_hogar
-  database[, names(codigos)] <<- 0
-  apollo_beta <<- model$apollo_beta
-  apollo_fixed <<- model$apollo_fixed
-  apollo_inputs <<- apollo_validateInputs()
-  predictions_base <<- apollo_prediction(model, apollo_probabilities, apollo_inputs)
-  data_hogar[, alts] <- predictions_base[, alts]
+  if (metodo == "hawkins") {
+    data_hogar[, alts] <- imputar_hawkins(data_hogar, gastos)
+  } else {
+    # the FMNL uses region (from the comuna) and NSE; a household without NSE takes the base level 1
+    data_hogar <- data_hogar %>% mutate(region = cut %/% 1000, nse = ifelse(is.na(NSE), 1, NSE))
+    apollo_initialise()
+    apollo_control <<- list(
+      modelName       = "FMNL",
+      modelDescr      = "Fractional MNL model on time use data",
+      indivID         = "id_hogar",
+      outputDirectory = "output"
+    )
+    apollo_probabilities <<- model$apollo_probabilities
+    database <<- data_hogar
+    database[, names(codigos)] <<- 0
+    apollo_beta <<- model$apollo_beta
+    apollo_fixed <<- model$apollo_fixed
+    apollo_inputs <<- apollo_validateInputs()
+    predictions_base <<- apollo_prediction(model, apollo_probabilities, apollo_inputs)
+    data_hogar[, alts] <- predictions_base[, alts]
+  }
   data_hogar[, alts] <- sweep(data_hogar[, alts], 1, unlist(data_hogar[, "ingreso_hogar"] - data_hogar[, "savings"]), "*")
 
   data <- merge(data, data_hogar[, c("id_hog", "savings", alts)], by = "id_hog", all.x = TRUE)
@@ -998,6 +1058,8 @@ imputacion_gastos <- function(data) {
   n_elderly            = "n_tercera_edad",
   has_elderly          = "hay_tercera_edad",
   household_size       = "n_personas",
+  n_members_15_plus    = "n_15_mas",
+  comuna_code          = "cut",
   mean_age             = "edad_promedio",
   has_children         = "tiene_hijos",
   in_couple            = "en_pareja",

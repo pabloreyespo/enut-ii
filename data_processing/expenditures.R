@@ -26,6 +26,8 @@ data_ingresos <- data_ingresos %>% # sprincipal: jefe de hogar
     folio,
     fe,
     macrozona,
+    estrato_muestreo, # sampling stratum: group of comunas x socioeconomic level (Metodologia IX EPF, Tabla 16)
+    cse, # socioeconomic level of the household (1 low, 2 middle, 3 high)
     npersonas,
     sprincipal,
     parentesco,
@@ -96,10 +98,15 @@ data_ingresos <- data_ingresos %>% # sprincipal: jefe de hogar
     n_trabajadores = sum((ing_disp_td + ing_disp_ti) > 0),
     income_person_week = mean(ing_disp_hog_hd) / n(),
     edad_promedio = mean(edad),
-    n_profesionales = sum(edunivel >= 14 & !(edunivel == 14 & edutermina == 2)),
+    # technical tertiary, professional or postgraduate degree completed (edunivel 10 to 14 in the IX EPF),
+    # the same people the ENUT counts as nivel_escolaridad >= 4. The former edunivel >= 14 cut came from
+    # the VIII EPF coding (14 = professional); in the IX EPF 14 is only a doctorate.
+    n_profesionales = sum(edunivel >= 10 & edutermina != 2),
     ingreso_hogar = sum(ing_disp_hd),
     quintil = max(quintil),
-    ing_disp_hog_hd = max(ing_disp_hog_hd)
+    ing_disp_hog_hd = max(ing_disp_hog_hd),
+    estrato = first(estrato_muestreo),
+    nse = first(cse)
   ) %>%
   mutate(macrozona = case_when(
     macrozona == 1 ~ "norte",
@@ -150,7 +157,7 @@ gastos <- data_ambos %>%
   mutate(id_hogar = 1:n()) %>%
   dplyr::select(
     folio, id_hogar, all_of(vector_gastos), savings, n_personas,
-    macrozona, quintil, n_menores_0_4,
+    macrozona, quintil, estrato, nse, n_menores_0_4,
     n_menores_5_14, n_personas_15_65, n_trabajadores, edad_promedio,
     n_profesionales, income_person_week, ingreso_hogar
   )
@@ -167,7 +174,14 @@ gastos <- gastos %>%
     n_trabajadores_cut = case_when(n_trabajadores >= 3 ~ 3, T ~ n_trabajadores),
     n_profesionales_cut = case_when(n_profesionales >= 2 ~ 3, T ~ n_profesionales)
   )
+# Location for the FMNL: region of the sampling stratum (data/epf_estratos_comunas.csv, Tabla 16 of
+# the Metodologia IX EPF) and household NSE. Gran Santiago (region 13) and NSE 1 are the base levels.
+mapa_estratos <- read.csv("data/epf_estratos_comunas.csv")
+gastos$region <- mapa_estratos$region[match(gastos$estrato, mapa_estratos$estrato)]
 write.csv(gastos, "data/gastos.csv")
+# Rscript data_processing/expenditures.R --solo-datos stops here: the Hawkins hot-deck imputation
+# (imputacion_gastos(metodo = "hawkins")) only needs data/gastos.csv, not the FMNL model.
+if ("--solo-datos" %in% commandArgs(trailingOnly = TRUE)) quit(save = "no")
 
 ########################################################################################################################
 ################                                 MODELOS                                                ################
@@ -186,30 +200,24 @@ apollo_control <- list(
   modelDescr = "Fractional MNL model on time use data",
   indivID = "id_hogar",
   outputDirectory = "output",
-  nCores = 22
+  nCores = as.integer(Sys.getenv("APOLLO_CORES", "22")) # 22 on the cluster; lower it on a laptop
 )
 
 database <- gastos
 database[, names(codigos)] <- database[, names(codigos)] / rowSums(database[, names(codigos)])
 
-apollo_beta <- c(
-  asc_alimentos = 0, bnpersonas_alimentos = 0, bnmenores_0_4_alimentos = 0, bnmenores_5_14_alimentos = 0, bnpersonas_15_65_alimentos = 0, bntrabajadores_alimentos = 0, bnprofesionales_alimentos = 0, bedadpromedio_alimentos = 0, bq2_alimentos = 0, bq3_alimentos = 0, bq4_alimentos = 0, bq5_alimentos = 0, bnorte_alimentos = 0, bcentro_alimentos = 0, bsur_alimentos = 0,
-  asc_vestimenta = 0, bnpersonas_vestimenta = 0, bnmenores_0_4_vestimenta = 0, bnmenores_5_14_vestimenta = 0, bnpersonas_15_65_vestimenta = 0, bntrabajadores_vestimenta = 0, bnprofesionales_vestimenta = 0, bedadpromedio_vestimenta = 0, bq2_vestimenta = 0, bq3_vestimenta = 0, bq4_vestimenta = 0, bq5_vestimenta = 0, bnorte_vestimenta = 0, bcentro_vestimenta = 0, bsur_vestimenta = 0,
-  asc_cuentas = 0, bnpersonas_cuentas = 0, bnmenores_0_4_cuentas = 0, bnmenores_5_14_cuentas = 0, bnpersonas_15_65_cuentas = 0, bntrabajadores_cuentas = 0, bnprofesionales_cuentas = 0, bedadpromedio_cuentas = 0, bq2_cuentas = 0, bq3_cuentas = 0, bq4_cuentas = 0, bq5_cuentas = 0, bnorte_cuentas = 0, bcentro_cuentas = 0, bsur_cuentas = 0,
-  asc_hogar = 0, bnpersonas_hogar = 0, bnmenores_0_4_hogar = 0, bnmenores_5_14_hogar = 0, bnpersonas_15_65_hogar = 0, bntrabajadores_hogar = 0, bnprofesionales_hogar = 0, bedadpromedio_hogar = 0, bq2_hogar = 0, bq3_hogar = 0, bq4_hogar = 0, bq5_hogar = 0, bnorte_hogar = 0, bcentro_hogar = 0, bsur_hogar = 0,
-  asc_salud = 0, bnpersonas_salud = 0, bnmenores_0_4_salud = 0, bnmenores_5_14_salud = 0, bnpersonas_15_65_salud = 0, bntrabajadores_salud = 0, bnprofesionales_salud = 0, bedadpromedio_salud = 0, bq2_salud = 0, bq3_salud = 0, bq4_salud = 0, bq5_salud = 0, bnorte_salud = 0, bcentro_salud = 0, bsur_salud = 0,
-  asc_transporte = 0, bnpersonas_transporte = 0, bnmenores_0_4_transporte = 0, bnmenores_5_14_transporte = 0, bnpersonas_15_65_transporte = 0, bntrabajadores_transporte = 0, bnprofesionales_transporte = 0, bedadpromedio_transporte = 0, bq2_transporte = 0, bq3_transporte = 0, bq4_transporte = 0, bq5_transporte = 0, bnorte_transporte = 0, bcentro_transporte = 0, bsur_transporte = 0,
-  asc_comunicaciones = 0, bnpersonas_comunicaciones = 0, bnmenores_0_4_comunicaciones = 0, bnmenores_5_14_comunicaciones = 0, bnpersonas_15_65_comunicaciones = 0, bntrabajadores_comunicaciones = 0, bnprofesionales_comunicaciones = 0, bedadpromedio_comunicaciones = 0, bq2_comunicaciones = 0, bq3_comunicaciones = 0, bq4_comunicaciones = 0, bq5_comunicaciones = 0, bnorte_comunicaciones = 0, bcentro_comunicaciones = 0, bsur_comunicaciones = 0,
-  asc_recreacion = 0, bnpersonas_recreacion = 0, bnmenores_0_4_recreacion = 0, bnmenores_5_14_recreacion = 0, bnpersonas_15_65_recreacion = 0, bntrabajadores_recreacion = 0, bnprofesionales_recreacion = 0, bedadpromedio_recreacion = 0, bq2_recreacion = 0, bq3_recreacion = 0, bq4_recreacion = 0, bq5_recreacion = 0, bnorte_recreacion = 0, bcentro_recreacion = 0, bsur_recreacion = 0,
-  asc_educacion = 0, bnpersonas_educacion = 0, bnmenores_0_4_educacion = 0, bnmenores_5_14_educacion = 0, bnpersonas_15_65_educacion = 0, bntrabajadores_educacion = 0, bnprofesionales_educacion = 0, bedadpromedio_educacion = 0, bq2_educacion = 0, bq3_educacion = 0, bq4_educacion = 0, bq5_educacion = 0, bnorte_educacion = 0, bcentro_educacion = 0, bsur_educacion = 0,
-  asc_restaurantes = 0, bnpersonas_restaurantes = 0, bnmenores_0_4_restaurantes = 0, bnmenores_5_14_restaurantes = 0, bnpersonas_15_65_restaurantes = 0, bntrabajadores_restaurantes = 0, bnprofesionales_restaurantes = 0, bedadpromedio_restaurantes = 0, bq2_restaurantes = 0, bq3_restaurantes = 0, bq4_restaurantes = 0, bq5_restaurantes = 0, bnorte_restaurantes = 0, bcentro_restaurantes = 0, bsur_restaurantes = 0
+# Covariates of the FMNL. Location enters as region (Gran Santiago, region 13, is the base) and household
+# NSE (1 is the base) instead of the former north / centre / south dummies: in a 5-fold cross validation on
+# the EPF the RMSE of the Ef1 share drops from 0.160 to 0.158. Region and NSE are computed inside
+# apollo_probabilities from the `region` and `nse` columns, so the saved model also predicts on the ENUT.
+parametros <- c(
+  "asc", "bnpersonas", "bnmenores_0_4", "bnmenores_5_14", "bnpersonas_15_65", "bntrabajadores",
+  "bnprofesionales", "bedadpromedio", "bq2", "bq3", "bq4", "bq5",
+  paste0("bregion", c(1:12, 14:16)), "bnse2", "bnse3"
 )
-
-apollo_fixed <- c(
-  "asc_vestimenta", "bnpersonas_vestimenta", "bnmenores_0_4_vestimenta", "bnmenores_5_14_vestimenta", "bnpersonas_15_65_vestimenta", "bntrabajadores_vestimenta",
-  "bnprofesionales_vestimenta", "bedadpromedio_vestimenta", "bq2_vestimenta", "bq3_vestimenta", "bq4_vestimenta", "bq5_vestimenta",
-  "bnorte_vestimenta", "bcentro_vestimenta", "bsur_vestimenta"
-)
+apollo_beta <- setNames(rep(0, length(parametros) * length(alts)),
+                        as.vector(outer(parametros, alts, paste, sep = "_")))
+apollo_fixed <- paste(parametros, "vestimenta", sep = "_") # vestimenta is the base alternative
 
 apollo_inputs <- apollo_validateInputs()
 
@@ -220,20 +228,22 @@ apollo_probabilities <- function(apollo_beta, apollo_inputs, functionality = "es
   V <- list()
   for (alt in c("alimentos", "vestimenta", "cuentas", "hogar", "salud", "transporte", "comunicaciones", "recreacion", "educacion", "restaurantes")) {
     V[[alt]] <- get(paste0("asc_", alt)) +
-      get(paste0("bnpersonas_", alt)) * n_personas_cut + # (n_personas >= 4 )                   +
+      get(paste0("bnpersonas_", alt)) * n_personas_cut +
       get(paste0("bnmenores_0_4_", alt)) * n_menores_0_4_cut +
       get(paste0("bnmenores_5_14_", alt)) * n_menores_5_14_cut +
       get(paste0("bnpersonas_15_65_", alt)) * n_personas_15_65_cut +
-      get(paste0("bntrabajadores_", alt)) * n_trabajadores_cut + # (n_trabajadores >= 2 )               +
-      get(paste0("bnprofesionales_", alt)) * n_profesionales_cut + # (n_trabajadores >= 2 )               +
-      get(paste0("bedadpromedio_", alt)) * edad_promedio + # (n_trabajadores >= 2 )               +
+      get(paste0("bntrabajadores_", alt)) * n_trabajadores_cut +
+      get(paste0("bnprofesionales_", alt)) * n_profesionales_cut +
+      get(paste0("bedadpromedio_", alt)) * edad_promedio +
       get(paste0("bq2_", alt)) * (quintil == 2) +
       get(paste0("bq3_", alt)) * (quintil == 3) +
       get(paste0("bq4_", alt)) * (quintil == 4) +
       get(paste0("bq5_", alt)) * (quintil == 5) +
-      get(paste0("bnorte_", alt)) * (macrozona == "norte") +
-      get(paste0("bcentro_", alt)) * (macrozona == "centro") +
-      get(paste0("bsur_", alt)) * (macrozona == "sur")
+      get(paste0("bnse2_", alt)) * (nse == 2) +
+      get(paste0("bnse3_", alt)) * (nse == 3)
+    for (r in c(1:12, 14:16)) {
+      V[[alt]] <- V[[alt]] + get(paste0("bregion", r, "_", alt)) * (region == r)
+    }
   }
 
   ### Define settings for MNL models component

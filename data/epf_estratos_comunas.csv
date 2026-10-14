@@ -1,0 +1,237 @@
+estrato,region,ciudad,cut,nse
+1,1,Iquique - Alto Hospicio,1107,1
+1,1,Iquique - Alto Hospicio,1101,1
+2,2,Antofagasta,2101,1
+3,3,Copiapó - Tierra Amarilla,3101,1
+3,3,Copiapó - Tierra Amarilla,3103,1
+4,4,La Serena - Coquimbo,4102,1
+4,4,La Serena - Coquimbo,4101,1
+5,5,Gran Valparaíso,5101,1
+6,5,Gran Valparaíso,5103,1
+6,5,Gran Valparaíso,5801,1
+6,5,Gran Valparaíso,5804,1
+6,5,Gran Valparaíso,5109,1
+7,6,Gran Rancagua,6106,1
+7,6,Gran Rancagua,6108,1
+7,6,Gran Rancagua,6111,1
+7,6,Gran Rancagua,6101,1
+7,6,Gran Rancagua,6116,1
+8,7,Talca,7105,1
+8,7,Talca,7101,1
+9,8,Gran Concepción,8103,1
+9,8,Gran Concepción,8101,1
+9,8,Gran Concepción,8112,1
+9,8,Gran Concepción,8105,1
+9,8,Gran Concepción,8107,1
+9,8,Gran Concepción,8110,1
+9,8,Gran Concepción,8111,1
+10,8,Gran Concepción,8102,1
+10,8,Gran Concepción,8106,1
+10,8,Gran Concepción,8108,1
+11,9,Gran Temuco,9112,1
+11,9,Gran Temuco,9101,1
+11,9,Gran Temuco,9120,1
+12,10,Puerto Montt - Puerto Varas,10101,1
+12,10,Puerto Montt - Puerto Varas,10109,1
+13,11,Coyhaique,11101,1
+13,11,Coyhaique,11101,2
+14,12,Punta Arenas,12101,1
+14,12,Punta Arenas,12101,2
+14,12,Punta Arenas,12101,3
+15,13,Gran Santiago,13102,1
+15,13,Gran Santiago,13103,1
+15,13,Gran Santiago,13106,1
+15,13,Gran Santiago,13116,1
+15,13,Gran Santiago,13117,1
+15,13,Gran Santiago,13119,1
+15,13,Gran Santiago,13605,1
+15,13,Gran Santiago,13121,1
+15,13,Gran Santiago,13604,1
+15,13,Gran Santiago,13124,1
+15,13,Gran Santiago,13126,1
+16,13,Gran Santiago,13107,1
+16,13,Gran Santiago,13108,1
+16,13,Gran Santiago,13113,1
+16,13,Gran Santiago,13114,1
+16,13,Gran Santiago,13115,1
+16,13,Gran Santiago,13118,1
+16,13,Gran Santiago,13120,1
+16,13,Gran Santiago,13122,1
+16,13,Gran Santiago,13123,1
+16,13,Gran Santiago,13127,1
+16,13,Gran Santiago,13101,1
+16,13,Gran Santiago,13132,1
+17,13,Gran Santiago,13104,1
+17,13,Gran Santiago,13302,1
+17,13,Gran Santiago,13125,1
+17,13,Gran Santiago,13128,1
+18,13,Gran Santiago,13109,1
+18,13,Gran Santiago,13111,1
+18,13,Gran Santiago,13129,1
+18,13,Gran Santiago,13130,1
+18,13,Gran Santiago,13131,1
+19,13,Gran Santiago,13110,1
+19,13,Gran Santiago,13112,1
+19,13,Gran Santiago,13201,1
+20,13,Gran Santiago,13403,1
+20,13,Gran Santiago,13105,1
+20,13,Gran Santiago,13401,1
+20,13,Gran Santiago,13601,1
+21,14,Valdivia,14101,1
+21,14,Valdivia,14101,3
+22,15,Arica,15101,1
+23,16,Chillán - Chillán Viejo,16101,1
+23,16,Chillán - Chillán Viejo,16101,3
+23,16,Chillán - Chillán Viejo,16103,1
+23,16,Chillán - Chillán Viejo,16103,3
+24,1,Iquique - Alto Hospicio,1107,2
+24,1,Iquique - Alto Hospicio,1101,2
+25,2,Antofagasta,2101,2
+26,3,Copiapó - Tierra Amarilla,3101,2
+26,3,Copiapó - Tierra Amarilla,3101,3
+26,3,Copiapó - Tierra Amarilla,3103,2
+26,3,Copiapó - Tierra Amarilla,3103,3
+27,4,La Serena - Coquimbo,4101,2
+28,4,La Serena - Coquimbo,4102,2
+29,5,Gran Valparaíso,5103,2
+29,5,Gran Valparaíso,5101,2
+29,5,Gran Valparaíso,5109,2
+30,5,Gran Valparaíso,5801,2
+30,5,Gran Valparaíso,5804,2
+31,6,Gran Rancagua,6101,2
+32,6,Gran Rancagua,6106,2
+32,6,Gran Rancagua,6108,2
+32,6,Gran Rancagua,6111,2
+32,6,Gran Rancagua,6116,2
+33,7,Talca,7105,2
+33,7,Talca,7101,2
+34,8,Gran Concepción,8102,2
+34,8,Gran Concepción,8101,2
+35,8,Gran Concepción,8103,2
+35,8,Gran Concepción,8105,2
+35,8,Gran Concepción,8106,2
+35,8,Gran Concepción,8110,2
+36,8,Gran Concepción,8107,2
+36,8,Gran Concepción,8108,2
+36,8,Gran Concepción,8110,2
+37,8,Gran Concepción,8112,2
+37,8,Gran Concepción,8111,2
+38,9,Gran Temuco,9112,2
+38,9,Gran Temuco,9101,2
+38,9,Gran Temuco,9120,2
+39,10,Puerto Montt - Puerto Varas,10101,2
+39,10,Puerto Montt - Puerto Varas,10109,2
+40,13,Gran Santiago,13102,2
+40,13,Gran Santiago,13103,2
+40,13,Gran Santiago,13106,2
+40,13,Gran Santiago,13117,2
+41,13,Gran Santiago,13116,2
+41,13,Gran Santiago,13121,2
+41,13,Gran Santiago,13124,2
+41,13,Gran Santiago,13126,2
+42,13,Gran Santiago,13119,2
+42,13,Gran Santiago,13605,2
+42,13,Gran Santiago,13604,2
+43,13,Gran Santiago,13113,2
+43,13,Gran Santiago,13114,2
+43,13,Gran Santiago,13115,2
+43,13,Gran Santiago,13118,2
+43,13,Gran Santiago,13120,2
+43,13,Gran Santiago,13123,2
+43,13,Gran Santiago,13132,2
+44,13,Gran Santiago,13122,2
+45,13,Gran Santiago,13104,2
+45,13,Gran Santiago,13107,2
+45,13,Gran Santiago,13302,2
+45,13,Gran Santiago,13125,2
+45,13,Gran Santiago,13128,2
+46,13,Gran Santiago,13108,2
+46,13,Gran Santiago,13127,2
+47,13,Gran Santiago,13109,2
+47,13,Gran Santiago,13129,2
+47,13,Gran Santiago,13130,2
+48,13,Gran Santiago,13110,2
+48,13,Gran Santiago,13111,2
+48,13,Gran Santiago,13131,2
+49,13,Gran Santiago,13403,2
+49,13,Gran Santiago,13105,2
+49,13,Gran Santiago,13401,2
+49,13,Gran Santiago,13601,2
+50,13,Gran Santiago,13112,2
+50,13,Gran Santiago,13201,2
+51,13,Gran Santiago,13101,2
+52,14,Valdivia,14101,2
+53,15,Arica,15101,2
+53,15,Arica,15101,3
+54,16,Chillán - Chillán Viejo,16101,2
+54,16,Chillán - Chillán Viejo,16103,2
+55,1,Iquique - Alto Hospicio,1107,3
+55,1,Iquique - Alto Hospicio,1101,3
+56,2,Antofagasta,2101,3
+57,4,La Serena - Coquimbo,4102,3
+57,4,La Serena - Coquimbo,4101,3
+58,5,Gran Valparaíso,5801,3
+58,5,Gran Valparaíso,5101,3
+58,5,Gran Valparaíso,5804,3
+59,5,Gran Valparaíso,5103,3
+59,5,Gran Valparaíso,5109,3
+60,6,Gran Rancagua,6106,3
+60,6,Gran Rancagua,6108,3
+60,6,Gran Rancagua,6111,3
+60,6,Gran Rancagua,6116,3
+61,7,Talca,7105,3
+61,7,Talca,7101,3
+62,8,Gran Concepción,8103,3
+62,8,Gran Concepción,8101,3
+62,8,Gran Concepción,8112,3
+62,8,Gran Concepción,8105,3
+62,8,Gran Concepción,8107,3
+62,8,Gran Concepción,8110,3
+62,8,Gran Concepción,8111,3
+63,8,Gran Concepción,8102,3
+63,8,Gran Concepción,8106,3
+63,8,Gran Concepción,8108,3
+64,9,Gran Temuco,9112,3
+64,9,Gran Temuco,9101,3
+64,9,Gran Temuco,9120,3
+65,10,Puerto Montt - Puerto Varas,10101,3
+65,10,Puerto Montt - Puerto Varas,10109,3
+66,13,Gran Santiago,13109,3
+66,13,Gran Santiago,13111,3
+66,13,Gran Santiago,13129,3
+66,13,Gran Santiago,13130,3
+66,13,Gran Santiago,13131,3
+67,13,Gran Santiago,13105,3
+67,13,Gran Santiago,13110,3
+67,13,Gran Santiago,13112,3
+67,13,Gran Santiago,13401,3
+68,13,Gran Santiago,13403,3
+68,13,Gran Santiago,13201,3
+68,13,Gran Santiago,13601,3
+69,13,Gran Santiago,13102,3
+69,13,Gran Santiago,13103,3
+69,13,Gran Santiago,13106,3
+69,13,Gran Santiago,13116,3
+69,13,Gran Santiago,13117,3
+69,13,Gran Santiago,13121,3
+70,13,Gran Santiago,13119,3
+70,13,Gran Santiago,13605,3
+70,13,Gran Santiago,13604,3
+70,13,Gran Santiago,13124,3
+70,13,Gran Santiago,13126,3
+71,13,Gran Santiago,13113,3
+71,13,Gran Santiago,13115,3
+71,13,Gran Santiago,13122,3
+72,13,Gran Santiago,13104,3
+72,13,Gran Santiago,13107,3
+72,13,Gran Santiago,13302,3
+72,13,Gran Santiago,13125,3
+72,13,Gran Santiago,13128,3
+73,13,Gran Santiago,13108,3
+73,13,Gran Santiago,13127,3
+74,13,Gran Santiago,13118,3
+75,13,Gran Santiago,13120,3
+76,13,Gran Santiago,13123,3
+77,13,Gran Santiago,13132,3
+78,13,Gran Santiago,13114,3
+79,13,Gran Santiago,13101,3
