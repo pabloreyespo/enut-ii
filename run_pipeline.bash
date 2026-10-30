@@ -18,6 +18,7 @@ set -e
 cd enut-ii
 
 # ---------------- Step 2: pre weekend file ----------------
+ml intel/2022.00  # rlang in the user library links libimf.so (Intel runtime)
 module load r/4.4.0
 Rscript data_processing/data_processing.R --pre
 
@@ -32,5 +33,6 @@ deactivate
 
 # ---------------- Step 4: rest of the pipeline ----------------
 ml purge
+ml intel/2022.00  # rlang in the user library links libimf.so (Intel runtime)
 module load r/4.4.0
 Rscript data_processing/data_processing.R
