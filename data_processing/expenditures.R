@@ -2,13 +2,10 @@ rm(list = ls()) # .rs.restartR()
 pkgs <- c("ggplot2", "dplyr", "tidyr", "readr", "purrr", "tibble", "stringr", "forcats", "lubridate", "haven", "reshape2", "apollo")
 invisible(lapply(pkgs, library, character.only = TRUE))
 
-codigos <- c(
-  g.alimentos = "01", g.vestimenta = "03", g.cuentas = "04", g.hogar = "05", g.salud = "06",
-  g.transporte = "07", g.comunicaciones = "08", g.recreacion = "09", g.educacion = "10", g.restaurantes = "11"
-)
+source("data_processing/categorias_gasto.R")
 
 vector_gastos <- c(
-  "g.alimentos", "g.vestimenta", "g.cuentas", "g.hogar",
+  "g.alimentos", "g.alcohol_tabaco", "g.vestimenta", "g.cuentas", "g.hogar",
   "g.salud", "g.transporte", "g.comunicaciones", "g.recreacion", "g.educacion",
   "g.restaurantes", "total_expenses"
 )
@@ -123,31 +120,19 @@ data_ingresos <- data_ingresos %>% # sprincipal: jefe de hogar
 data_gastos <- data_gastos %>%
   filter(ccif != "04.2.1.01.01" & ccif != "04.2.2.01.01" & ccif != "04.2.2.01.02" & folio != "") %>%
   drop_na(folio) %>%
-  mutate(codigo = d) %>% # paste(D,G, sep =".")) %>%
-  mutate(codigo = case_when(
-    d == "09" & g == "1" ~ "08",
-    d == "02" ~ "01", # alcoho
-    d == "12" & g == "1" ~ "06",
-    d == "12" & g == "2" ~ "09",
-    d == "12" & g == "3" ~ "03",
-    d == "12" & g == "4" ~ "04",
-    d == "12" & g == "5" ~ "04",
-    d == "12" & g == "6" ~ "04",
-    d == "12" & g == "7" ~ "04",
-    d == "12" & g == "8" ~ "04",
-    T ~ codigo
-  )) %>%
+  mutate(codigo = codigo_categoria(d, g)) %>%
   group_by(folio, codigo) %>%
   summarise(monto_total = sum(gasto)) %>%
   mutate(codigo = names(codigos)[match(codigo, codigos)]) %>%
   ungroup() %>%
   dcast(folio ~ codigo, value.var = "monto_total", fun.aggregate = sum) %>%
   dplyr::select(-c("NA")) %>%
-  mutate_at(names(codigos), ~ replace_na(., 0))
+  mutate_at(names(codigos), ~ replace_na(., 0)) %>%
+  plegar_alcohol()
 
 data_ambos <- merge(data_ingresos, data_gastos, "folio") %>%
   arrange(folio) %>%
-  mutate(total_expenses = dplyr::select(., names(codigos)) %>% rowSums()) %>% # legal.discounts
+  mutate(total_expenses = dplyr::select(., codigos_composicion) %>% rowSums()) %>% # legal.discounts
   mutate(savings = ingreso_hogar - total_expenses) %>%
   filter(total_expenses > 0 & ingreso_hogar > 0) # & EDAD > 0 & EDUE > 0 & EDUNIVEL>0
 
@@ -206,7 +191,7 @@ apollo_control <- list(
 )
 
 database <- gastos
-database[, names(codigos)] <- database[, names(codigos)] / rowSums(database[, names(codigos)])
+database[, codigos_composicion] <- database[, codigos_composicion] / rowSums(database[, codigos_composicion])
 
 # Covariates of the FMNL. Location enters as region (Gran Santiago, region 13, is the base) and household
 # NSE (1 is the base) instead of the former north / centre / south dummies: in a 5-fold cross validation on
