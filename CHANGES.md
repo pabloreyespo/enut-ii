@@ -181,6 +181,64 @@ The unsuffixed columns (the 10 divisions, `savings`, `total_expenses`) are
 unchanged, so existing models give the same results. The FMNL model
 (`output/FMNL-epf-ix`) is now always loaded.
 
+## 10. Joint distribution inference for the expenditure draw (`metodo = "jdi"`)
+
+`imputacion_gastos()` now defaults to `metodo = "jdi"`; the cell hot-deck of
+section 8 stays available as `metodo = "hotdeck"` (and the FMNL as `"fmnl"`).
+Output columns and units are unchanged (`Ef1/Ef2/Ec/savings_jdi` still add up to
+the household income, the unsuffixed divisions are the donors' mean shares times
+income minus savings), so downstream code keeps working.
+
+Method (Ye et al. 2017, JASSS, sections 3.1-3.13; Hawkins and Habib 2022,
+Transportation, "Data fusion by joint distribution inference"). ENUT (time use)
+and EPF (expenditure) share only household covariates D, so there is no table
+that crosses time use with expenditure and f(D, time, exp) = f_ENUT(D, time) *
+g_EPF(exp | D). Imputing means drawing EPF households from g(exp | D):
+
+1. Dimensions D: income quintile, `region`, household members aged 15+
+   (`n_15_mas`, binned 1, 2, 3, 4+) and workers (`n_trabajadores`, binned 0, 1,
+   2, 3+). Dwelling type is not in the ENUT and is dropped.
+2. Independence tests (`pruebas_independencia()`): weighted chi-square (weights
+   normalised to the EPF sample size) of each dimension against quintiles of
+   savings/income, of the Ec share and of the Ef1 share, alpha = 0.05. A
+   dimension independent of the three would leave D (Ye eq. 9); the quintile
+   never leaves. The strength is the largest Cramer's V. Result on the current
+   data: all four dimensions are associated with the three classes (p < 1e-7);
+   V is 0.13/0.08/0.09 for the quintile, 0.06-0.08 for region, 0.04-0.09 for
+   members 15+ and 0.06 for workers, so workers is the weakest (dropped
+   first), then region. Printed on every run and saved to `output/jdi_chi2.csv`.
+3. IPF (`ipf_multivariado()`): EPF expansion factors (`fe`) are raked so that
+   the one-way and two-way margins of the retained dimensions match the ENUT
+   household distribution (weighted by `fe_ch`, the household expansion factor of
+   the ENUT; `data_processing.R` passes it as `pesos`). Tolerance 1e-8, at most
+   1000 sweeps, error if it does not converge. Current data: 18 sweeps, error
+   9.6e-09, no ENUT mass outside the EPF support.
+4. Draws by member (`sorteo_jdi()`): each ENUT household draws
+   m = max(1, `n_15_mas`) EPF households with replacement, with probability
+   proportional to the raked weight among those with its exact profile. With
+   fewer than 10 donors the weakest dimension is dropped, then the next, never
+   the quintile. The level used per household is returned as `nivel` (and saved
+   to `output/jdi_nivel.csv`).
+5. As before, the mean of the donors' (10 divisions, savings) / household income
+   is multiplied by the ENUT household income. Seed 2023.
+
+On the current ENUT households (10,976): 66% use the full profile
+(quintile + region + members 15+ + workers), 27% drop workers and 8% drop workers
+and region. In the hot-deck 54% used stratum x quintile.
+
+`expenditures.R` now keeps `fe` and `n_15_mas` in `data/gastos.csv`
+(`n_trabajadores` already counted dependent plus independent labor income).
+Tests: `Rscript tests/test_jdi.R`.
+
+Differences to the spec: the ENUT expansion factor is household-level `fe_ch`;
+region is the EPF stratum region (`gastos.region`) against `cut %/% 1000` in the
+ENUT; the savings regression and FMNL are untouched.
+
+References: Ye, P., Hu, X., Yuan, Y., Wang, F.-Y. (2017).
+Population synthesis based on joint distribution inference without disaggregate
+samples. JASSS. Hawkins, J., Habib, K. N. (2022). A multisource data fusion
+framework for joint population, expenditure, and time use synthesis. Transportation, doi:10.1007/s11116-022-10279-8.
+
 ## Household income split (`repartir_ingreso()`)
 - Rents (`y7b`) and transfers from outside the household such as child support (`y8b`) are now the
   income of whoever receives them (`ing_otros`). Before, they fell into the household residual `ing_g`,

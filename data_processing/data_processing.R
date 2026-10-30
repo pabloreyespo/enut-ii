@@ -90,8 +90,12 @@ table(data_raw$es_trabajador)
 table(data_raw$es_familia)
 
 ## ----- Análisis datos resultantes -----------------
-data_raw_G <- imputacion_gastos(data_raw)
-data_enut_G <- imputacion_gastos(data_enut)
+# factor de expansion ENUT del hogar (fe_ch, constante dentro del hogar) para el IPF del JDI
+pesos_hogar <- haven::read_dta("data/raw/ii-enut-bdd-stata.dta", col_select = c("id_hog", "fe_ch")) %>%
+  distinct(id_hog, .keep_all = TRUE) %>%
+  transmute(id_hog, fe_hogar = as.numeric(fe_ch))
+data_raw_G <- imputacion_gastos(data_raw, pesos = pesos_hogar)
+data_enut_G <- imputacion_gastos(data_enut, pesos = pesos_hogar)
 
 # Agregando las categorias de gasto especificadas y limpiando las demas
 data_enut_G <- data_enut_G %>%

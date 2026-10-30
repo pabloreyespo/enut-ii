@@ -958,6 +958,225 @@ imputar_hawkins <- function(data_hogar, gastos, min_donantes = 10, semilla = 202
   list(shares = P, razones = R)
 }
 
+# ---------------------------------------------------------------------------------------------------------
+# Inferencia de distribucion conjunta (JDI), Ye et al. (2017, JASSS) y Hawkins y Habib (2022,
+# Transportation). La ENUT y la EPF solo comparten covariables de hogar D (quintil, region, integrantes
+# de 15+, trabajadores), asi que f(D, tiempo, gasto) = f_ENUT(D, tiempo) * g_EPF(gasto | D): imputar es
+# sortear hogares EPF de g(gasto | D). El IPF deja la composicion de D de los donantes igual a la de la
+# ENUT, y las celdas ralas se colapsan por la dimension de asociacion mas debil (el quintil nunca).
+# Detalle en CHANGES.md, seccion 10.
+# ---------------------------------------------------------------------------------------------------------
+
+# Dimensiones comunes D de una tabla de hogares (ENUT o EPF), ya agrupadas.
+dimensiones_jdi <- function(d) {
+  data.frame(
+    quintil = d$quintil,
+    region = d$region,
+    n15 = pmin(pmax(d$n_15_mas, 1), 4),
+    ntrab = pmin(d$n_trabajadores, 3)
+  )
+}
+
+# Chi-cuadrado de independencia sobre la tabla ponderada. Los pesos se normalizan a suma n (muestra
+# efectiva = observaciones), si no el estadistico crece con el factor de expansion. Devuelve el
+# estadistico, los grados de libertad, el valor p y la V de Cramer.
+chi2_independencia <- function(x, y, w = NULL) {
+  if (is.null(w)) w <- rep(1, length(x))
+  ok <- !is.na(x) & !is.na(y) & !is.na(w)
+  x <- x[ok]; y <- y[ok]; w <- w[ok]
+  n <- length(x)
+  w <- w * n / sum(w)
+  tab <- tapply(w, list(x, y), sum)
+  tab[is.na(tab)] <- 0
+  tab <- tab[rowSums(tab) > 0, colSums(tab) > 0, drop = FALSE]
+  if (nrow(tab) < 2 || ncol(tab) < 2) return(list(estadistico = 0, gl = 0, p = 1, V = 0))
+  esperado <- outer(rowSums(tab), colSums(tab)) / sum(tab)
+  est <- sum((tab - esperado)^2 / esperado)
+  gl <- (nrow(tab) - 1) * (ncol(tab) - 1)
+  list(
+    estadistico = est, gl = gl, p = pchisq(est, gl, lower.tail = FALSE),
+    V = sqrt(est / (n * min(nrow(tab) - 1, ncol(tab) - 1)))
+  )
+}
+
+# Pruebas de cada dimension contra cada clase de gasto (columnas de `epf`).
+pruebas_independencia <- function(epf, dims, clases, w, alpha = 0.05) {
+  filas <- lapply(dims, function(dim) {
+    do.call(rbind, lapply(clases, function(cl) {
+      t <- chi2_independencia(epf[[dim]], epf[[cl]], w)
+      data.frame(
+        dimension = dim, clase = cl, estadistico = t$estadistico, gl = t$gl, p = t$p, V = t$V,
+        asociada = t$p < alpha
+      )
+    }))
+  })
+  do.call(rbind, filas)
+}
+
+# Una dimension independiente de las tres clases sale de D (Ye eq. 9). Las de `fijas` (el quintil) se
+# quedan siempre. V = mayor V de Cramer entre las clases, por dimension retenida.
+dimensiones_retenidas <- function(tabla, dims, fijas = "quintil") {
+  retenidas <- dims[vapply(dims, function(d) any(tabla$asociada[tabla$dimension == d]) || d %in% fijas, logical(1))]
+  V <- vapply(retenidas, function(d) max(tabla$V[tabla$dimension == d]), numeric(1))
+  list(retenidas = retenidas, V = V)
+}
+
+# Quintiles ponderados de x (los empates comparten clase).
+cuantiles_ponderados <- function(x, w, k = 5) {
+  ux <- sort(unique(x))
+  g <- match(x, ux)
+  acum <- cumsum(as.vector(rowsum(w, g))) / sum(w)
+  pmin(ceiling(acum[g] * k - 1e-12), k)
+}
+
+# IPF multivariado (Ye 3.9-3.10): ajusta los pesos de los hogares EPF (`perfiles`, una fila por hogar,
+# dimensiones en columnas) hasta que las marginales de una y de dos dimensiones coincidan con las del
+# objetivo (ENUT, ponderado por `w_objetivo`), ambas como participaciones. Las celdas vacias en la EPF
+# siguen vacias. Los hogares del objetivo con un perfil sin hogares EPF en alguna marginal se sacan antes
+# de calcular las metas (masa_sin_soporte: su participacion en el objetivo); si no, las marginales
+# renormalizadas por separado serian inconsistentes entre si y el IPF no podria converger. Una celda EPF
+# sin objetivo queda en cero.
+ipf_multivariado <- function(perfiles, w, objetivo, w_objetivo = NULL, tol = 1e-8, max_iter = 1000,
+                             error_si_falla = TRUE) {
+  dims <- names(perfiles)
+  if (is.null(w_objetivo)) w_objetivo <- rep(1, nrow(objetivo))
+  clave <- function(d, v) do.call(paste, c(lapply(d[v], as.character), sep = "|"))
+  margenes <- c(as.list(dims), if (length(dims) >= 2) combn(dims, 2, simplify = FALSE))
+  w <- w / sum(w)
+  con_soporte <- Reduce(`&`, lapply(margenes, function(m) clave(objetivo, m) %in% unique(clave(perfiles, m)[w > 0])))
+  masa_sin_soporte <- sum(w_objetivo[!con_soporte]) / sum(w_objetivo)
+  objetivo <- objetivo[con_soporte, , drop = FALSE]
+  w_objetivo <- w_objetivo[con_soporte]
+  M <- lapply(margenes, function(m) {
+    k_epf <- clave(perfiles, m)
+    meta <- tapply(w_objetivo, clave(objetivo, m), sum)
+    meta <- meta / sum(meta)
+    list(k = match(k_epf, names(meta)), meta = as.vector(meta))
+  })
+  suma_celdas <- function(w, m) {
+    ok <- !is.na(m$k)
+    cur <- numeric(length(m$meta))
+    s <- rowsum(w[ok], m$k[ok])
+    cur[as.integer(rownames(s))] <- s[, 1]
+    cur
+  }
+  error_max <- function(w) max(vapply(M, function(m) max(abs(suma_celdas(w, m) - m$meta)), numeric(1)))
+  iter <- 0
+  err <- error_max(w)
+  while (err >= tol && iter < max_iter) {
+    iter <- iter + 1
+    for (m in M) {
+      f <- m$meta / suma_celdas(w, m)
+      f[!is.finite(f)] <- 0
+      ok <- !is.na(m$k)
+      w[ok] <- w[ok] * f[m$k[ok]]
+      w[!ok] <- 0
+    }
+    w <- w / sum(w)
+    err <- error_max(w)
+  }
+  convergio <- err < tol
+  if (!convergio && error_si_falla) {
+    stop(sprintf("IPF no convergio en %d iteraciones (error maximo %.3e)", max_iter, err))
+  }
+  list(w = w, iter = iter, error = err, convergio = convergio, masa_sin_soporte = masa_sin_soporte)
+}
+
+# Sorteo por integrante con colapso. Para cada hogar ENUT (fila de `enut`, con las columnas de
+# `perfiles_epf`) sortea m hogares EPF con reemplazo, con probabilidad proporcional a `w` entre los
+# hogares con exactamente su perfil. Con menos de `min_donantes` hogares saca la dimension de menor V
+# (V: vector con nombre sobre las dimensiones colapsables; el quintil no esta y nunca se saca). Devuelve,
+# por cada matriz de `matrices` (filas = hogares EPF), el promedio de los m donantes, y el nivel usado.
+sorteo_jdi <- function(enut, perfiles_epf, w, V, m, matrices, min_donantes = 10, semilla = 2023) {
+  if (!is.null(semilla)) set.seed(semilla)
+  colapsables <- names(V)
+  orden <- colapsables[order(V)]
+  fijas <- setdiff(names(perfiles_epf), colapsables)
+  niveles <- lapply(0:length(orden), function(j) setdiff(c(fijas, colapsables), orden[seq_len(j)]))
+  etiqueta <- vapply(niveles, paste, character(1), collapse = "+")
+  clave <- function(d, v) do.call(paste, c(lapply(d[v], as.character), sep = "|"))
+  k_epf <- lapply(niveles, function(v) clave(perfiles_epf, v))
+  k_enut <- lapply(niveles, function(v) clave(enut, v))
+  positivo <- w > 0
+  n <- nrow(enut)
+  m <- rep_len(m, n)
+  salida <- lapply(matrices, function(M) matrix(NA_real_, n, ncol(M), dimnames = list(NULL, colnames(M))))
+  nivel <- character(n)
+  cache <- new.env()
+  for (i in seq_len(n)) {
+    k0 <- k_enut[[1]][i]
+    d <- cache[[k0]]
+    if (is.null(d)) {
+      for (j in seq_along(niveles)) {
+        idx <- which(k_epf[[j]] == k_enut[[j]][i] & positivo)
+        if (length(idx) >= min_donantes || j == length(niveles)) break
+      }
+      d <- list(idx = idx, nivel = etiqueta[j])
+      cache[[k0]] <- d
+    }
+    if (length(d$idx) == 0) stop("sorteo_jdi: no hay donantes con el quintil del hogar ", i)
+    s <- d$idx[sample.int(length(d$idx), m[i], replace = TRUE, prob = w[d$idx])]
+    for (nm in names(matrices)) salida[[nm]][i, ] <- colMeans(matrices[[nm]][s, , drop = FALSE])
+    nivel[i] <- d$nivel
+  }
+  c(salida, list(nivel = nivel))
+}
+
+# Imputacion de gasto por JDI. Devuelve lo mismo que imputar_hawkins (shares: participaciones de las
+# 10 divisiones; razones: 10 divisiones y ahorro sobre el ingreso del hogar) mas `nivel` por hogar, la
+# tabla chi-cuadrado y el resumen del IPF. `data_hogar` necesita quintil, region (o cut), n_15_mas,
+# n_trabajadores y, si existe, fe_hogar (factor de expansion ENUT; sin el, ponderacion uniforme).
+imputar_jdi <- function(data_hogar, gastos, min_donantes = 10, semilla = 2023, alpha = 0.05) {
+  stopifnot(all(c("fe", "n_15_mas", "n_trabajadores", "region", "quintil") %in% names(gastos)))
+  if (!"region" %in% names(data_hogar)) data_hogar$region <- data_hogar$cut %/% 1000
+  w_enut <- if ("fe_hogar" %in% names(data_hogar)) data_hogar$fe_hogar else rep(1, nrow(data_hogar))
+  stopifnot(!anyNA(w_enut))
+  div <- paste0("g.", alts)
+  shares <- as.matrix(gastos[, div]) / gastos$total_expenses
+  colnames(shares) <- alts
+  razones <- as.matrix(gastos[, c(div, "savings")]) / gastos$ingreso_hogar
+  colnames(razones) <- c(alts, "savings")
+
+  perf_epf <- dimensiones_jdi(gastos)
+  perf_enut <- dimensiones_jdi(data_hogar)
+  stopifnot(!anyNA(perf_enut), !anyNA(perf_epf))
+  dims <- names(perf_epf)
+
+  # clases de gasto: quintiles de ahorro/ingreso y de las participaciones Ec y Ef1
+  ef1 <- rowSums(gastos[, paste0("g.", c("alimentos", "recreacion", "restaurantes", "comunicaciones"))])
+  ec <- rowSums(gastos[, paste0("g.", c("cuentas", "hogar", "salud", "transporte", "educacion"))])
+  epf <- cbind(perf_epf, data.frame(
+    c_ahorro = cuantiles_ponderados(gastos$savings / gastos$ingreso_hogar, gastos$fe),
+    c_ec = cuantiles_ponderados(ec / gastos$total_expenses, gastos$fe),
+    c_ef1 = cuantiles_ponderados(ef1 / gastos$total_expenses, gastos$fe)
+  ))
+  pruebas <- pruebas_independencia(epf, dims, c("c_ahorro", "c_ec", "c_ef1"), gastos$fe, alpha)
+  sel <- dimensiones_retenidas(pruebas, dims, fijas = "quintil")
+  cat("\nJDI: chi-cuadrado dimension x clase de gasto (EPF ponderada, alpha =", alpha, ")\n")
+  print(transform(pruebas, estadistico = round(estadistico, 1), p = signif(p, 3), V = round(V, 3)), row.names = FALSE)
+  cat("Dimensiones retenidas:", paste(sel$retenidas, collapse = ", "), "\n")
+  retenidas <- sel$retenidas
+
+  ipf <- ipf_multivariado(perf_epf[, retenidas, drop = FALSE], gastos$fe, perf_enut[, retenidas, drop = FALSE],
+    w_objetivo = w_enut
+  )
+  cat(sprintf(
+    "JDI IPF: convergio en %d iteraciones, error maximo de marginales %.2e, masa ENUT sin soporte EPF %.4f\n",
+    ipf$iter, ipf$error, ipf$masa_sin_soporte
+  ))
+
+  V <- sel$V[setdiff(names(sel$V), "quintil")]
+  s <- sorteo_jdi(perf_enut[, retenidas, drop = FALSE], perf_epf[, retenidas, drop = FALSE], ipf$w, V,
+    pmax(1, data_hogar$n_15_mas), list(shares = shares, razones = razones), min_donantes, semilla
+  )
+  cat("JDI: hogares por nivel de colapso\n")
+  print(table(s$nivel))
+  list(
+    shares = s$shares, razones = s$razones, nivel = s$nivel, pruebas = pruebas,
+    ipf = ipf[c("iter", "error", "masa_sin_soporte")]
+  )
+}
+
 # Ef1, Ef2 y Ec (las grandes categorias de utils.R) desde montos de las 10 divisiones.
 agregar_categorias <- function(M, sufijo) {
   out <- data.frame(
@@ -969,7 +1188,11 @@ agregar_categorias <- function(M, sufijo) {
   out
 }
 
-imputacion_gastos <- function(data, metodo = "hawkins") {
+# metodo: "jdi" (inferencia de distribucion conjunta, por defecto), "hotdeck" (celdas Hawkins, seccion 8
+# de CHANGES.md) o "fmnl". `pesos`: data.frame(id_hog, fe_hogar) con el factor de expansion ENUT del hogar
+# (fe_ch); sin el, el JDI pondera uniforme los hogares ENUT.
+imputacion_gastos <- function(data, metodo = "jdi", pesos = NULL) {
+  metodo <- match.arg(metodo, c("jdi", "hotdeck", "fmnl"))
   library("minpack.lm")
   data_hogar <- data %>%
     dplyr::select(
@@ -1042,7 +1265,15 @@ imputacion_gastos <- function(data, metodo = "hawkins") {
     ))
   data_hogar$id_hogar <- 1:nrow(data_hogar)
 
-  hd <- imputar_hawkins(data_hogar, gastos)
+  if (!is.null(pesos)) {
+    data_hogar$fe_hogar <- pesos$fe_hogar[match(data_hogar$id_hog, pesos$id_hog)]
+    stopifnot(!anyNA(data_hogar$fe_hogar))
+  }
+  hd <- if (metodo == "hotdeck") imputar_hawkins(data_hogar, gastos) else imputar_jdi(data_hogar, gastos)
+  if (metodo == "jdi") {
+    write.csv(hd$pruebas, "output/jdi_chi2.csv", row.names = FALSE)
+    write.csv(data.frame(id_hog = data_hogar$id_hog, nivel = hd$nivel), "output/jdi_nivel.csv", row.names = FALSE)
+  }
   # the FMNL uses region (from the comuna) and NSE; a household without NSE takes the base level 1
   data_hogar <- data_hogar %>% mutate(region = cut %/% 1000, nse = ifelse(is.na(NSE), 1, NSE))
   apollo_initialise()
@@ -1061,9 +1292,9 @@ imputacion_gastos <- function(data, metodo = "hawkins") {
   predictions_base <<- apollo_prediction(model, apollo_probabilities, apollo_inputs)
   gasto_hogar <- data_hogar$ingreso_hogar - data_hogar$savings
   fmnl <- as.matrix(predictions_base[, alts]) * gasto_hogar
-  # metodo elige las 10 divisiones sin sufijo: hot-deck (participaciones) o FMNL, ambos con el ahorro
+  # metodo elige las 10 divisiones sin sufijo: JDI o hot-deck (participaciones), o FMNL, con el ahorro
   # de la regresion. Las columnas _fmnl y _jdi se guardan siempre (ver CHANGES.md).
-  data_hogar[, alts] <- if (metodo == "hawkins") hd$shares * gasto_hogar else fmnl
+  data_hogar[, alts] <- if (metodo != "fmnl") hd$shares * gasto_hogar else fmnl
   jdi <- hd$razones * data_hogar$ingreso_hogar
   stopifnot(isTRUE(all.equal(rowSums(jdi), data_hogar$ingreso_hogar, check.attributes = FALSE)))
   sufijos <- c(

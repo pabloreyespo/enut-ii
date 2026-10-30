@@ -87,9 +87,11 @@ data_ingresos <- data_ingresos %>% # sprincipal: jefe de hogar
     percentil <= 0.80000001 ~ 4,
     T ~ 5
   )) %>%
-  dplyr::select(-c(percentil, fe)) %>%
+  dplyr::select(-percentil) %>%
   group_by(folio) %>%
   summarise(
+    fe = first(fe), # household expansion factor (JDI imputation)
+    n_15_mas = sum(edad >= 15),
     n_menores_0_4 = sum(edad <= 4),
     n_personas = max(npersonas),
     macrozona = max(macrozona),
@@ -156,7 +158,7 @@ data_ambos <- merge(data_ingresos, data_gastos, "folio") %>%
 gastos <- data_ambos %>%
   mutate(id_hogar = 1:n()) %>%
   dplyr::select(
-    folio, id_hogar, all_of(vector_gastos), savings, n_personas,
+    folio, id_hogar, fe, n_15_mas, all_of(vector_gastos), savings, n_personas,
     macrozona, quintil, estrato, nse, n_menores_0_4,
     n_menores_5_14, n_personas_15_65, n_trabajadores, edad_promedio,
     n_profesionales, income_person_week, ingreso_hogar
@@ -179,8 +181,8 @@ gastos <- gastos %>%
 mapa_estratos <- read.csv("data/epf_estratos_comunas.csv")
 gastos$region <- mapa_estratos$region[match(gastos$estrato, mapa_estratos$estrato)]
 write.csv(gastos, "data/gastos.csv")
-# Rscript data_processing/expenditures.R --solo-datos stops here: the Hawkins hot-deck imputation
-# (imputacion_gastos(metodo = "hawkins")) only needs data/gastos.csv, not the FMNL model.
+# Rscript data_processing/expenditures.R --solo-datos stops here: the JDI imputation
+# (imputacion_gastos(metodo = "jdi")) only needs data/gastos.csv, not the FMNL model.
 if ("--solo-datos" %in% commandArgs(trailingOnly = TRUE)) quit(save = "no")
 
 ########################################################################################################################
