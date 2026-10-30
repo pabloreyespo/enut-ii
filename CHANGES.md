@@ -250,3 +250,39 @@ framework for joint population, expenditure, and time use synthesis. Transportat
   and `fixed_income` in `utils.R` are unchanged. `I` now includes `ing_otros`. `ingreso_hogar` and the
   quintiles do not change.
 - Tests: `Rscript tests/test_ingresos.R`.
+
+## 11. Patch of the published datasets (`data_processing/parche_gastos_jdi.R`)
+
+The full pipeline cannot be rerun as is (it needs a twin matrix that no longer matches the current
+specification, see steps.md), so the JDI draw of section 10 is applied directly to the published
+datasets: `Rscript data_processing/parche_gastos_jdi.R`. The script reads `data/enut-ii.dta` and
+`data/enut-ii-raw.dta`, rebuilds the household table (`quintil`, `n_trabajadores`, `ingreso_hogar`,
+`n_15_mas`, `region = cut %/% 1000`, and the household expansion factor `fe_ch` from
+`ii-enut-bdd-stata.dta`), calls `imputar_jdi()` with seed 2023 and recomputes only `Ef1_jdi`,
+`Ef2_jdi`, `Ec_jdi` and `savings_jdi` (ratios x `ingreso_hogar` x `prop_ing_hogar`, rounded to 2
+decimals). All other columns and the 13,373 rows are unchanged (checked in the script, including the
+`-ENG` renames). It rewrites the eight variants (raw, aggregated, `-ENG`; csv and dta) and
+`output/jdi_chi2.csv` and `output/jdi_nivel.csv`.
+
+Result on the 9,947 published households: IPF in 18 sweeps (error 8.9e-09, no mass outside the EPF
+support); 6,580 households use the full profile, 2,595 drop workers and 772 drop workers and region.
+At person level the `_jdi` means go from 47.87, 3.31, 51.85, 12.79 (Ef1, Ef2, Ec, savings) to 48.92,
+3.48, 53.60, 9.83, and the SD from 72.3, 6.5, 85.7, 74.4 to 74.8, 7.2, 92.9, 67.1 (correlation old/new
+0.77, 0.50, 0.79, 0.26).
+
+## 12. Wage-rate outlier filter (`filtrar_salarios_extremos()`)
+
+`data_processing.R` now drops extreme wage rates right after the time-use filters (Vallejo filter,
+weekend imputation, `diagnostico_trabajo`, `adjust_working_hours`, `data_to168hours`) and before
+`imputacion_gastos()`. The wage rate is `w = ing_trab / t_to`, the same definition used later for
+the published `w`, with `t_to` already adjusted to contracted hours at that point.
+
+* Among workers with a positive, finite `w`, rows whose `log(w)` lies outside
+  `[Q1 - k IQR, Q3 + k IQR]` are dropped. `k` is the named argument `k = 3`.
+* Rows without a positive `w` (non-workers) are kept untouched.
+* Rows before and after are printed, as `diagnostico_trabajo()` does.
+* Same rule as `drop_extreme_wages()` in the `mtuem-lc-activity-participation-py` project.
+* Tests: `Rscript tests/test_salarios.R`.
+* Indicative effect on the current published `enut-ii.csv` (the real filter runs earlier, so the exact
+  counts will differ): 34 of 6105 workers dropped (22 low, 12 high); `w` range goes from 0.057 to 489.9 to 0.19 to 73.8.
+* Rerun the full pipeline (`sbatch run_pipeline.bash`) to apply it.
