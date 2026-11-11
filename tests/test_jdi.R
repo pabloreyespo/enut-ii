@@ -177,3 +177,58 @@ test_that("ipf_multivariado converges when some target households have a profile
   expect_equal(sum(r$w), 1)
   expect_equal(r$masa_sin_soporte, sum(p[objetivo$a == 2 & objetivo$b == 2]))
 })
+
+# --- JDI plus: NSE and professionals in the profile ----------------------------------------------------
+test_that("dimensiones_jdi adds NSE and professionals only when asked", {
+  epf <- data.frame(quintil = c(1, 5), region = c(13, 8), n_15_mas = c(0, 6), n_trabajadores = c(1, 5),
+                    nse = c(1, 3), n_profesionales = c(0, 4))
+  expect_equal(names(dimensiones_jdi(epf)), c("quintil", "region", "n15", "ntrab"))
+  d <- dimensiones_jdi(epf, plus = TRUE)
+  expect_equal(names(d), c("quintil", "region", "n15", "ntrab", "nse", "prof"))
+  expect_equal(d$nse, c(1, 3))
+  expect_equal(d$prof, c(0, 2))
+  # the ENUT names the variable NSE and a household without it takes the base level 1
+  enut <- data.frame(quintil = 1:2, region = 1:2, n_15_mas = 1:2, n_trabajadores = 0:1, NSE = c(NA, 2), n_profesionales = 1:2)
+  expect_equal(dimensiones_jdi(enut, plus = TRUE)$nse, c(1, 2))
+})
+
+test_that("imputar_jdi with plus matches donors on NSE and professionals and keeps ratios adding up", {
+  set.seed(12)
+  n <- 3000
+  epf <- data.frame(
+    quintil = sample(1:2, n, replace = TRUE), region = 1, n_15_mas = 1, n_trabajadores = 1,
+    nse = sample(1:3, n, replace = TRUE), n_profesionales = sample(0:1, n, replace = TRUE),
+    fe = runif(n, 100, 400), ingreso_hogar = 100
+  )
+  # the share of bills depends only on NSE: 10, 30 or 50 of an income of 100
+  g <- matrix(0, n, 10, dimnames = list(NULL, paste0("g.", alts)))
+  g[, "g.cuentas"] <- c(10, 30, 50)[epf$nse]
+  g[, "g.alimentos"] <- 60 - g[, "g.cuentas"]
+  epf <- cbind(epf, g)
+  epf$total_expenses <- rowSums(g)
+  epf$savings <- epf$ingreso_hogar - epf$total_expenses
+  enut <- data.frame(quintil = rep(1:2, 30), cut = 1101, n_15_mas = 1, n_trabajadores = 1,
+                     NSE = rep(1:3, 20), n_profesionales = rep(0:1, each = 30), ingreso_hogar = 200)
+  r <- imputar_jdi(enut, epf, semilla = 2023, plus = TRUE)
+  expect_equal(unname(rowSums(r$razones)), rep(1, 60), tolerance = 1e-9)
+  expect_equal(unname(r$razones[, "cuentas"]), c(0.1, 0.3, 0.5)[enut$NSE], tolerance = 1e-12)
+})
+
+# --- k donors per household member -------------------------------------------------------------------
+test_that("imputar_jdi averages k donors per member aged 15 or more", {
+  set.seed(13)
+  n <- 400
+  epf <- data.frame(quintil = 1, region = 1, n_15_mas = 1, n_trabajadores = 1, fe = 1, ingreso_hogar = 100)[rep(1, n), ]
+  g <- matrix(0, n, 10, dimnames = list(NULL, paste0("g.", alts)))
+  g[, "g.cuentas"] <- rep(c(10, 50), n / 2)   # two kinds of donors
+  epf <- cbind(epf, g)
+  epf$total_expenses <- rowSums(g)
+  epf$savings <- epf$ingreso_hogar - epf$total_expenses
+  enut <- data.frame(quintil = 1, cut = 1101, n_15_mas = 1, n_trabajadores = 1, ingreso_hogar = 100)[rep(1, 200), ]
+  uno <- imputar_jdi(enut, epf, semilla = 2023)$razones[, "cuentas"]
+  dos <- imputar_jdi(enut, epf, semilla = 2023, k = 2)$razones[, "cuentas"]
+  expect_true(all(round(uno, 10) %in% c(0.1, 0.5)))            # one donor: its own ratio
+  expect_true(all(round(dos, 10) %in% c(0.1, 0.3, 0.5)))       # two donors: their mean
+  expect_true(any(round(dos, 10) == 0.3))
+  expect_lt(var(dos), var(uno))
+})

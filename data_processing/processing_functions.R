@@ -988,13 +988,22 @@ imputar_hawkins <- function(data_hogar, gastos, min_donantes = 10, semilla = 202
 # ---------------------------------------------------------------------------------------------------------
 
 # Dimensiones comunes D de una tabla de hogares (ENUT o EPF), ya agrupadas.
-dimensiones_jdi <- function(d) {
-  data.frame(
+# Con `plus` se agregan el NSE (1 a 3; la ENUT lo llama NSE y un hogar sin dato toma el nivel base 1) y
+# los profesionales del hogar (0, 1, 2 o mas), las dos variables comunes mas asociadas a la participacion
+# del gasto comprometido en la EPF (V de Cramer de 0,22 y 0,17; el quintil, 0,12).
+dimensiones_jdi <- function(d, plus = FALSE) {
+  dims <- data.frame(
     quintil = d$quintil,
     region = d$region,
     n15 = pmin(pmax(d$n_15_mas, 1), 4),
     ntrab = pmin(d$n_trabajadores, 3)
   )
+  if (plus) {
+    nse <- if ("nse" %in% names(d)) d$nse else d$NSE
+    dims$nse <- ifelse(is.na(nse), 1, nse)
+    dims$prof <- pmin(d$n_profesionales, 2)
+  }
+  dims
 }
 
 # Chi-cuadrado de independencia sobre la tabla ponderada. Los pesos se normalizan a suma n (muestra
@@ -1145,8 +1154,11 @@ sorteo_jdi <- function(enut, perfiles_epf, w, V, m, matrices, min_donantes = 10,
 # Imputacion de gasto por JDI. Devuelve lo mismo que imputar_hawkins (shares: participaciones de las
 # 10 divisiones; razones: 10 divisiones y ahorro sobre el ingreso del hogar) mas `nivel` por hogar, la
 # tabla chi-cuadrado y el resumen del IPF. `data_hogar` necesita quintil, region (o cut), n_15_mas,
-# n_trabajadores y, si existe, fe_hogar (factor de expansion ENUT; sin el, ponderacion uniforme).
-imputar_jdi <- function(data_hogar, gastos, min_donantes = 10, semilla = 2023, alpha = 0.05) {
+# n_trabajadores y, si existe, fe_hogar (factor de expansion ENUT; sin el, ponderacion uniforme). Con
+# `plus` el perfil suma NSE y profesionales (ver dimensiones_jdi). Se sortean `k` donantes por cada
+# integrante de 15 o mas (k = 1 es Hawkins y Habib, 2022); con k mayor el promedio tiene menos ruido de
+# sorteo y menos de la variabilidad de la EPF.
+imputar_jdi <- function(data_hogar, gastos, min_donantes = 10, semilla = 2023, alpha = 0.05, plus = FALSE, k = 1) {
   stopifnot(all(c("fe", "n_15_mas", "n_trabajadores", "region", "quintil") %in% names(gastos)))
   if (!"region" %in% names(data_hogar)) data_hogar$region <- data_hogar$cut %/% 1000
   w_enut <- if ("fe_hogar" %in% names(data_hogar)) data_hogar$fe_hogar else rep(1, nrow(data_hogar))
@@ -1157,8 +1169,8 @@ imputar_jdi <- function(data_hogar, gastos, min_donantes = 10, semilla = 2023, a
   razones <- as.matrix(gastos[, c(div, "savings")]) / gastos$ingreso_hogar
   colnames(razones) <- c(alts, "savings")
 
-  perf_epf <- dimensiones_jdi(gastos)
-  perf_enut <- dimensiones_jdi(data_hogar)
+  perf_epf <- dimensiones_jdi(gastos, plus)
+  perf_enut <- dimensiones_jdi(data_hogar, plus)
   stopifnot(!anyNA(perf_enut), !anyNA(perf_epf))
   dims <- names(perf_epf)
 
@@ -1187,7 +1199,7 @@ imputar_jdi <- function(data_hogar, gastos, min_donantes = 10, semilla = 2023, a
 
   V <- sel$V[setdiff(names(sel$V), "quintil")]
   s <- sorteo_jdi(perf_enut[, retenidas, drop = FALSE], perf_epf[, retenidas, drop = FALSE], ipf$w, V,
-    pmax(1, data_hogar$n_15_mas), list(shares = shares, razones = razones), min_donantes, semilla
+    k * pmax(1, data_hogar$n_15_mas), list(shares = shares, razones = razones), min_donantes, semilla
   )
   cat("JDI: hogares por nivel de colapso\n")
   print(table(s$nivel))
@@ -1208,6 +1220,24 @@ agregar_categorias <- function(M, sufijo) {
   )
   names(out) <- paste0(c("Ef0", "Ef1", "Ef2", "Ec"), sufijo)
   out
+}
+
+# Gasto comprometido por regresion lineal (Ec_lr), analogo al ahorro: se ajusta en la EPF el gasto
+# comprometido del hogar (cuentas, hogar, salud, transporte, educacion) y se predice en la ENUT. Las
+# covariables son las de la regresion de ahorro con la localizacion del FMNL (region y NSE en vez de
+# macrozona): en validacion cruzada de 5 grupos el R2 sube de 0,493 a 0,506. La prediccion se acota
+# entre 0 y el gasto del hogar (ingreso - ahorro). `data_hogar` necesita `savings`, `region` y `nse`.
+imputar_ec_lr <- function(data_hogar, gastos) {
+  gastos$ec <- rowSums(gastos[, paste0("g.", c("cuentas", "hogar", "salud", "transporte", "educacion"))])
+  terminos <- c(
+    "ingreso_hogar", paste0("(quintil == ", 2:5, ")"),
+    "n_menores_0_4_cut", "n_menores_5_14_cut", "n_personas_15_65_cut", "n_personas_cut",
+    "n_trabajadores_cut", "n_profesionales_cut", "edad_promedio",
+    paste0("(region == ", c(1:12, 14:16), ")"), "(nse == 2)", "(nse == 3)"
+  )
+  modelo <- lm(as.formula(paste("ec ~", paste(terminos, collapse = " + "))), data = gastos)
+  gasto_hogar <- pmax(data_hogar$ingreso_hogar - data_hogar$savings, 0)
+  list(modelo = modelo, ec = pmin(pmax(unname(predict(modelo, data_hogar)), 0), gasto_hogar))
 }
 
 # metodo: "jdi" (inferencia de distribucion conjunta, por defecto), "hotdeck" (celdas Hawkins, seccion 8
@@ -1235,7 +1265,6 @@ imputacion_gastos <- function(data, metodo = "jdi", pesos = NULL) {
   # hist(gastos$savings/gastos$ingresos, breaks =100)
   gastos <<- read.csv("data/gastos.csv") %>% filter(ingreso_hogar > 0, savings / ingreso_hogar > -1)
 
-  model <<- apollo_loadModel("output/FMNL-epf-ix")
   lin_reg <<- lm(
     savings ~
       ingreso_hogar +
@@ -1298,35 +1327,46 @@ imputacion_gastos <- function(data, metodo = "jdi", pesos = NULL) {
   }
   # the FMNL uses region (from the comuna) and NSE; a household without NSE takes the base level 1
   data_hogar <- data_hogar %>% mutate(region = cut %/% 1000, nse = ifelse(is.na(NSE), 1, NSE))
-  apollo_initialise()
-  apollo_control <<- list(
-    modelName       = "FMNL",
-    modelDescr      = "Fractional MNL model on time use data",
-    indivID         = "id_hogar",
-    outputDirectory = "output"
-  )
-  apollo_probabilities <<- model$apollo_probabilities
-  database <<- data_hogar
-  database[, names(codigos)] <<- 0
-  apollo_beta <<- model$apollo_beta
-  apollo_fixed <<- model$apollo_fixed
-  apollo_inputs <<- apollo_validateInputs()
-  predictions_base <<- apollo_prediction(model, apollo_probabilities, apollo_inputs)
   gasto_hogar <- data_hogar$ingreso_hogar - data_hogar$savings
-  fmnl <- as.matrix(predictions_base[, alts]) * gasto_hogar
   # metodo elige las 10 divisiones sin sufijo: JDI o hot-deck (participaciones), o FMNL, con el ahorro
-  # de la regresion. Las columnas _fmnl y _jdi se guardan siempre (ver CHANGES.md).
-  data_hogar[, alts] <- if (metodo != "fmnl") hd$shares * gasto_hogar else fmnl
+  # de la regresion. Siempre se guardan tres imputaciones (CHANGES.md, secciones 9, 10, 12 y 14):
+  #   _jdi       razones de los donantes sobre su ingreso por el ingreso del hogar ENUT (suma el ingreso);
+  #   _jdi_plus  lo mismo, con NSE y profesionales en el perfil y dos donantes por integrante;
+  #   Ec_lr      gasto comprometido por regresion lineal.
+  # El FMNL solo se carga si se pide.
+  if (metodo == "fmnl") {
+    model <<- apollo_loadModel("output/FMNL-epf-ix")
+    apollo_initialise()
+    apollo_control <<- list(
+      modelName       = "FMNL",
+      modelDescr      = "Fractional MNL model on time use data",
+      indivID         = "id_hogar",
+      outputDirectory = "output"
+    )
+    apollo_probabilities <<- model$apollo_probabilities
+    database <<- data_hogar
+    database[, names(codigos)] <<- 0
+    apollo_beta <<- model$apollo_beta
+    apollo_fixed <<- model$apollo_fixed
+    apollo_inputs <<- apollo_validateInputs()
+    predictions_base <<- apollo_prediction(model, apollo_probabilities, apollo_inputs)
+    data_hogar[, alts] <- as.matrix(predictions_base[, alts]) * gasto_hogar
+  } else {
+    data_hogar[, alts] <- hd$shares * gasto_hogar
+  }
   jdi <- hd$razones * data_hogar$ingreso_hogar
   stopifnot(isTRUE(all.equal(rowSums(jdi), data_hogar$ingreso_hogar, check.attributes = FALSE)))
-  sufijos <- c(
-    paste0(c("Ef0", "Ef1", "Ef2", "Ec", "savings"), "_jdi"),
-    paste0(c("Ef0", "Ef1", "Ef2", "Ec", "savings"), "_fmnl")
-  )
+  jdi_plus <- imputar_jdi(data_hogar, gastos, plus = TRUE, k = 2)$razones * data_hogar$ingreso_hogar
+  stopifnot(isTRUE(all.equal(rowSums(jdi_plus), data_hogar$ingreso_hogar, check.attributes = FALSE)))
+  ec_lr <- imputar_ec_lr(data_hogar, gastos)
+  print(summary(ec_lr$modelo))
+  categorias <- c("Ef0", "Ef1", "Ef2", "Ec", "savings")
+  sufijos <- c(paste0(categorias, "_jdi"), paste0(categorias, "_jdi_plus"), "Ec_lr")
   data_hogar <- cbind(
     data_hogar,
     agregar_categorias(jdi, "_jdi"), savings_jdi = jdi[, "savings"],
-    agregar_categorias(fmnl, "_fmnl"), savings_fmnl = data_hogar$savings
+    agregar_categorias(jdi_plus, "_jdi_plus"), savings_jdi_plus = jdi_plus[, "savings"],
+    Ec_lr = ec_lr$ec
   )
 
   data <- merge(data, data_hogar[, c("id_hog", "savings", alts, sufijos)], by = "id_hog", all.x = TRUE)

@@ -293,3 +293,67 @@ The recommended expenditure imputation is `imputacion_gastos(metodo = "jdi")`, w
 pipeline. Its `_jdi` columns are the ones published. The cell hot-deck (`"hotdeck"`) is kept for comparison.
 The `_fmnl` columns (FMNL predictions) are no longer published: the FMNL is estimated only to compare the
 two methods, and its output files stay under `output/`.
+
+## 12. Committed expenditure by linear regression (`Ec_lr`)
+
+`imputacion_gastos()` now also writes `Ec_lr`, a third imputation of committed expenditure that does
+not use donors: `imputar_ec_lr()` fits, on the EPF households, a linear regression of committed
+expenditure (bills, household, health, transport and education, with divisions 12 and 13 inside
+bills) and predicts it for every ENUT household, as the savings regression does. The covariates are
+those of the savings regression with the location of the FMNL (region and NSE instead of macrozone):
+household income, income quintile, children aged 0 to 4 and 5 to 14, members aged 15 to 65, household
+size, workers, professionals and mean age. In a 5-fold cross validation on the EPF the R2 is 0.506
+(0.493 with the macrozone; a regression of the share of expenditure reaches 0.495 once expenditure is
+itself predicted). The prediction is bounded between 0 and the household expenditure (income minus
+savings) and allocated to each person by `prop_ing_hogar`, like the other amounts.
+
+`Ec_lr` is for comparison; the recommended imputation is still the JDI (`Ec_jdi`). The FMNL model is
+now loaded only with `metodo = "fmnl"`, so the default run no longer needs `output/FMNL-epf-ix` and
+no `_fmnl` column is written. Tests: `Rscript tests/test_ec_lr.R`.
+
+## 13. Alternatives to the JDI scale that were tried and discarded
+
+`_jdi` stays as the donors' ratios to their own income times the income of the ENUT household. Three
+alternatives were tried on the ENUT II with the hobbies models and are not written by the pipeline:
+
+- The donors' amounts in pesos, as Hawkins and Habib (2022) average household expenditure. ENUT
+  households have less income than their EPF donors of the same quintile (80 against 117 in quintile 1,
+  with the 1.18 price factor), so 11.7% of the model sample gets `Ec` above its labour income and the
+  values of time are implausible.
+- The donors' expenditure shares times income minus the regression savings. It uses a regression
+  inside the JDI, and with the expenditure taken from the donors instead it is the same as `_jdi`
+  (household means of `Ec` of 154.4 and 155.4, correlation 0.998).
+- Matching donors on 20 income ranges in pesos (EPF quantiles applied to both surveys) instead of
+  each survey's quintile. The donors' income gets within 2% of the household's (20% above with the
+  quintile), `Ec` barely moves (158.0 against 155.4), only 24% of the households keep the region in
+  their profile (66% before) and the latent class model fits worse (log-likelihood 226 points lower).
+
+The IX EPF amounts are not deflated (its methodology only brings expenditure to a monthly scale and
+takes March 2022 as the central month). The CPI ratio from March 2022 to October or November 2023 is
+1.13 to 1.14, below the 1.18 of `expenditures.R`; the factor has not been changed.
+
+## 14. JDI plus: NSE and professionals in the profile, two donors per member (`_jdi_plus`)
+
+`imputacion_gastos()` writes a second set of JDI columns, `Ef0_jdi_plus`, `Ef1_jdi_plus`,
+`Ef2_jdi_plus`, `Ec_jdi_plus` and `savings_jdi_plus`. They use the same method and scale as `_jdi`
+(the donors' ratios to their own income times the income of the ENUT household), with two changes
+(`imputar_jdi(plus = TRUE, k = 2)`):
+
+- The donors' profile adds the NSE (three levels) and the professionals in the household (0, 1, 2 or
+  more) to the quintile, the region, the members aged 15 or more and the workers. In the EPF they are
+  the common variables most associated with the share of committed expenditure (Cramer's V of 0.22
+  and 0.17; the quintile, 0.12). With six dimensions only 20% of the ENUT households keep the region
+  in their profile (66% with `_jdi`).
+- Two donors are drawn per member aged 15 or more instead of one, so the household gets the mean of
+  twice as many donors and the draw has half the variance.
+
+Why: `_jdi` is one draw, and with one donor per member 14% of the workers get the expenditure of a
+single EPF household. Between two draws the `Ec` of the same household changes by 48 on average (mean
+`Ec` of 156) and the correlation is 0.80; with two donors per member, 34 and 0.90. That noise leaves
+3.1% of the model sample with `Ec` above labour income (1.4% with `_jdi_plus`, 1.4% in 2015, where
+expenditure was an expected value) and it drives the time use models: over four draws the value of
+leisure of the latent class model is 8.2 to 10.1 with `_jdi` and 5.5 to 5.8 with `_jdi_plus`, and the
+work elasticity of class 2 is 0.11 to 0.22 against -0.20 to -0.13. `_jdi_plus` and `Ec_lr` (5.9 and
+-0.16) agree. The number of donors is not a neutral choice: with four per member and the `_jdi`
+profile the value of leisure falls to 3.6 and that elasticity to -0.66. Figures are preliminary.
+Tests: `Rscript tests/test_jdi.R`.
