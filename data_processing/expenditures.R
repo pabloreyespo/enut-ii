@@ -150,7 +150,11 @@ gastos <- data_ambos %>%
   )
 
 gastos[, c(vector_gastos, "ingreso_hogar", "savings", "income_person_week")] <-
-  gastos[, c(vector_gastos, "ingreso_hogar", "savings", "income_person_week")] / 4000 * 1.18 # inflación entre periodos de muestreo1.025 # (4 semanas, miles de pesos, 1.025 la inflación)
+  gastos[, c(vector_gastos, "ingreso_hogar", "savings", "income_person_week")] / 4000 * 1.12
+# / 4000: de pesos por mes a miles de pesos por semana (4 semanas). * 1.12: precios de la EPF IX a precios de
+# la ENUT II. La base de la EPF esta en pesos del mes de cada entrevista; el IPC (base 2018 = 100) promedia
+# 119,27 en su levantamiento (octubre de 2021 a septiembre de 2022) y 134,00 en el de la ENUT II
+# (septiembre a diciembre de 2023): 134,00 / 119,27 = 1,123. Ver CHANGES.md, seccion 16.
 
 gastos <- gastos %>%
   mutate(

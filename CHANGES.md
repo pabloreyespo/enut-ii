@@ -294,7 +294,7 @@ pipeline. Its `_jdi` columns are the ones published. The cell hot-deck (`"hotdec
 The `_fmnl` columns (FMNL predictions) are no longer published: the FMNL is estimated only to compare the
 two methods, and its output files stay under `output/`.
 
-## 12. Committed expenditure by linear regression (`Ec_lr`)
+## 13. Committed expenditure by linear regression (`Ec_lr`)
 
 `imputacion_gastos()` now also writes `Ec_lr`, a third imputation of committed expenditure that does
 not use donors: `imputar_ec_lr()` fits, on the EPF households, a linear regression of committed
@@ -311,7 +311,7 @@ savings) and allocated to each person by `prop_ing_hogar`, like the other amount
 now loaded only with `metodo = "fmnl"`, so the default run no longer needs `output/FMNL-epf-ix` and
 no `_fmnl` column is written. Tests: `Rscript tests/test_ec_lr.R`.
 
-## 13. Alternatives to the JDI scale that were tried and discarded
+## 14. Alternatives to the JDI scale that were tried and discarded
 
 `_jdi` stays as the donors' ratios to their own income times the income of the ENUT household. Three
 alternatives were tried on the ENUT II with the hobbies models and are not written by the pipeline:
@@ -328,11 +328,7 @@ alternatives were tried on the ENUT II with the hobbies models and are not writt
   quintile), `Ec` barely moves (158.0 against 155.4), only 24% of the households keep the region in
   their profile (66% before) and the latent class model fits worse (log-likelihood 226 points lower).
 
-The IX EPF amounts are not deflated (its methodology only brings expenditure to a monthly scale and
-takes March 2022 as the central month). The CPI ratio from March 2022 to October or November 2023 is
-1.13 to 1.14, below the 1.18 of `expenditures.R`; the factor has not been changed.
-
-## 14. JDI plus: NSE and professionals in the profile, two donors per member (`_jdi_plus`)
+## 15. JDI plus: NSE and professionals in the profile, two donors per member (`_jdi_plus`)
 
 `imputacion_gastos()` writes a second set of JDI columns, `Ef0_jdi_plus`, `Ef1_jdi_plus`,
 `Ef2_jdi_plus`, `Ec_jdi_plus` and `savings_jdi_plus`. They use the same method and scale as `_jdi`
@@ -357,3 +353,16 @@ work elasticity of class 2 is 0.11 to 0.22 against -0.20 to -0.13. `_jdi_plus` a
 -0.16) agree. The number of donors is not a neutral choice: with four per member and the `_jdi`
 profile the value of leisure falls to 3.6 and that elasticity to -0.66. Figures are preliminary.
 Tests: `Rscript tests/test_jdi.R`.
+
+## 16. Price factor between the IX EPF and the ENUT II: 1.12
+
+`expenditures.R` brings the EPF amounts (expenditure, income and savings) to the prices of the ENUT II
+with a factor of 1.12 instead of 1.18. The IX EPF microdata are not deflated: the methodology only
+brings expenditure to a monthly scale, so each household is in the pesos of its interview month. The
+CPI (INE, annual base 2018 = 100) averages 119.27 over the EPF fieldwork (October 2021 to September
+2022, from 112.94 to 126.75) and 134.00 over the ENUT II fieldwork (September to December 2023), a
+ratio of 1.123. The 1.18 was the ratio from the first month of the EPF to the last of the ENUT II
+(1.187). The factor assumes the EPF households are spread evenly over its twelve months and uses the
+CPI for income too. `_jdi` and `_jdi_plus` do not depend on it, because they use the donors' ratios;
+`Ec_lr` and the regression savings are in EPF pesos and fall with it. `data/gastos.csv` was
+regenerated with `Rscript data_processing/expenditures.R --solo-datos`.

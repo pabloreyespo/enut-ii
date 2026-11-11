@@ -1329,7 +1329,7 @@ imputacion_gastos <- function(data, metodo = "jdi", pesos = NULL) {
   data_hogar <- data_hogar %>% mutate(region = cut %/% 1000, nse = ifelse(is.na(NSE), 1, NSE))
   gasto_hogar <- data_hogar$ingreso_hogar - data_hogar$savings
   # metodo elige las 10 divisiones sin sufijo: JDI o hot-deck (participaciones), o FMNL, con el ahorro
-  # de la regresion. Siempre se guardan tres imputaciones (CHANGES.md, secciones 9, 10, 12 y 14):
+  # de la regresion. Siempre se guardan tres imputaciones (CHANGES.md, secciones 9, 10, 13 y 15):
   #   _jdi       razones de los donantes sobre su ingreso por el ingreso del hogar ENUT (suma el ingreso);
   #   _jdi_plus  lo mismo, con NSE y profesionales en el perfil y dos donantes por integrante;
   #   Ec_lr      gasto comprometido por regresion lineal.
